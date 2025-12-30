@@ -41,7 +41,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         d += min(rz, 1.);
     }
 
-    fragColor = vec4(cl, 1.0);
+    // 색상 밝기에 따라 알파값 계산 (배경 투명)
+    float brightness = max(max(cl.r, cl.g), cl.b);
+    float alpha = smoothstep(0.0, 0.15, brightness);
+    fragColor = vec4(cl, alpha);
 }
 
 void main() {
@@ -106,7 +109,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         d += min(rz, 1.);
     }
 
-    fragColor = vec4(cl, 1.0);
+    // 색상 밝기에 따라 알파값 계산 (배경 투명)
+    float brightness = max(max(cl.r, cl.g), cl.b);
+    float alpha = smoothstep(0.0, 0.15, brightness);
+    fragColor = vec4(cl, alpha);
 }
 
 void main() {
@@ -171,7 +177,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         d += min(rz, 1.);
     }
 
-    fragColor = vec4(cl, 1.0);
+    // 색상 밝기에 따라 알파값 계산 (배경 투명)
+    float brightness = max(max(cl.r, cl.g), cl.b);
+    float alpha = smoothstep(0.0, 0.15, brightness);
+    fragColor = vec4(cl, alpha);
 }
 
 void main() {

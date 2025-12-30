@@ -60,6 +60,28 @@ export default function ImageUploader({ onImagesChange, images }: ImageUploaderP
     onImagesChange(images.filter((img) => img.id !== id))
   }, [images, onImagesChange])
 
+  // 예시 이미지 로드 함수
+  const loadExampleImage = useCallback(async () => {
+    try {
+      const response = await fetch('/example-answer.jpg')
+      const blob = await response.blob()
+      const file = new File([blob], 'example-answer.jpg', { type: 'image/jpeg' })
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const exampleImage: UploadedImage = {
+          id: `example-${Date.now()}`,
+          file,
+          preview: e.target?.result as string,
+        }
+        onImagesChange([...images, exampleImage])
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error('예시 이미지 로드 실패:', error)
+    }
+  }, [images, onImagesChange])
+
   return (
     <div className="space-y-4">
       {/* Upload Area */}
@@ -102,6 +124,19 @@ export default function ImageUploader({ onImagesChange, images }: ImageUploaderP
           </div>
         </div>
       </div>
+
+      {/* 예시 이미지 로드 버튼 */}
+      <button
+        type="button"
+        onClick={loadExampleImage}
+        className="w-full py-3 px-4 border border-gray-700 rounded-xl text-gray-400 hover:text-gray-200 hover:border-gray-600 hover:bg-gray-800/50 transition-all duration-200 flex items-center justify-center gap-2"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span>예시 답안 이미지 불러오기</span>
+        <span className="text-xs text-gray-500">(건축시공기술사)</span>
+      </button>
 
       {/* Image Previews */}
       {images.length > 0 && (

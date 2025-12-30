@@ -13,6 +13,9 @@ export default function ResultPage() {
   const [field, setField] = useState<string>('')
   const [showOCR, setShowOCR] = useState(false)
   const [showModelAnswer, setShowModelAnswer] = useState(false)
+  const [modelAnswer, setModelAnswer] = useState<string>('')
+  const [isGeneratingAnswer, setIsGeneratingAnswer] = useState(false)
+  const [generationError, setGenerationError] = useState<string | null>(null)
 
   useEffect(() => {
     const storedResult = sessionStorage.getItem('evaluationResult')
@@ -28,6 +31,45 @@ export default function ResultPage() {
     setExtractedText(storedText || '')
     setField(storedField || '')
   }, [router])
+
+  // 모범답안 생성 함수
+  const generateModelAnswer = async () => {
+    if (!result || !extractedText) return
+
+    setIsGeneratingAnswer(true)
+    setGenerationError(null)
+    setShowModelAnswer(true)
+
+    try {
+      const response = await fetch('/api/generate-model-answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          extractedText,
+          selectedField: field,
+          evaluations: result.evaluations,
+          overallStrengths: result.overallStrengths,
+          overallWeaknesses: result.overallWeaknesses,
+          improvements: result.improvements,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('모범답안 생성에 실패했습니다.')
+      }
+
+      const data = await response.json()
+      if (data.success) {
+        setModelAnswer(data.data.modelAnswer)
+      } else {
+        throw new Error(data.error || '모범답안 생성에 실패했습니다.')
+      }
+    } catch (err) {
+      setGenerationError(err instanceof Error ? err.message : '모범답안 생성 중 오류가 발생했습니다.')
+    } finally {
+      setIsGeneratingAnswer(false)
+    }
+  }
 
   if (!result) {
     return (
@@ -59,88 +101,6 @@ export default function ResultPage() {
       {/* Summary */}
       <ResultSummary result={result} />
 
-      {/* Model Answer Button */}
-      <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-2xl border border-purple-700/50 p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center text-white">
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-white">AI 모범 답안</h3>
-              <p className="text-sm text-gray-400">평가 결과를 바탕으로 생성된 최적의 답안을 확인하세요</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowModelAnswer(!showModelAnswer)}
-            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white rounded-xl transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2"
-          >
-            {showModelAnswer ? (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                </svg>
-                닫기
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                모범 답안 보기
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Model Answer Content */}
-        {showModelAnswer && (
-          <div className="mt-6 animate-fadeIn">
-            <div className="bg-gray-900/80 rounded-xl p-6 border border-gray-700">
-              <div className="prose prose-invert max-w-none">
-                {result.modelAnswer ? (
-                  <div className="whitespace-pre-wrap text-gray-300 leading-relaxed">
-                    {result.modelAnswer}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-gray-400 mb-4">모범 답안을 생성 중입니다...</p>
-                    <p className="text-sm text-gray-500">
-                      평가 결과의 강점을 유지하고 약점을 보완한 최적의 답안이 제공됩니다.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {result.modelAnswer && (
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(result.modelAnswer || '')
-                    alert('모범 답안이 클립보드에 복사되었습니다.')
-                  }}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-gray-300 text-sm transition-colors flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                  </svg>
-                  복사하기
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
       {/* Evaluator Cards - 세로 배치 */}
       <div>
         <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
@@ -154,6 +114,139 @@ export default function ResultPage() {
             <EvaluatorCard key={evaluation.evaluatorId} evaluation={evaluation} />
           ))}
         </div>
+      </div>
+
+      {/* Model Answer Section */}
+      <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-2xl border border-purple-700/50 p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center text-white">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white">AI 모범 답안 생성</h3>
+              <p className="text-sm text-gray-400">평가위원들의 피드백을 반영하여 수정된 답안을 생성합니다</p>
+            </div>
+          </div>
+          {!modelAnswer && !isGeneratingAnswer ? (
+            <button
+              onClick={generateModelAnswer}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white rounded-xl transition-all duration-200 font-medium shadow-lg hover:shadow-xl flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              모범 답안 생성
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowModelAnswer(!showModelAnswer)}
+              className="px-6 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white rounded-xl transition-all duration-200 font-medium flex items-center gap-2"
+            >
+              {showModelAnswer ? (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  </svg>
+                  접기
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                  펼치기
+                </>
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* Model Answer Content */}
+        {showModelAnswer && (
+          <div className="mt-6 animate-fadeIn">
+            {isGeneratingAnswer ? (
+              <div className="bg-gray-900/80 rounded-xl p-8 border border-gray-700">
+                <div className="text-center">
+                  <div className="relative w-20 h-20 mx-auto mb-6">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-spin opacity-30" style={{ animationDuration: '3s' }} />
+                    <div className="absolute inset-2 bg-gray-900 rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-purple-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <p className="text-white font-medium mb-2">모범 답안을 생성하고 있습니다</p>
+                  <p className="text-sm text-gray-400">
+                    평가위원들의 피드백을 분석하여 강점은 유지하고 약점을 보완합니다...
+                  </p>
+                </div>
+              </div>
+            ) : generationError ? (
+              <div className="bg-red-900/30 rounded-xl p-6 border border-red-700/50">
+                <div className="flex items-center gap-3 text-red-400">
+                  <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span>{generationError}</span>
+                </div>
+                <button
+                  onClick={generateModelAnswer}
+                  className="mt-4 px-4 py-2 bg-red-800/50 hover:bg-red-700/50 rounded-lg text-red-300 text-sm transition-colors"
+                >
+                  다시 시도
+                </button>
+              </div>
+            ) : modelAnswer ? (
+              <div className="bg-gray-900/80 rounded-xl border border-gray-700 overflow-hidden">
+                {/* 모범답안 헤더 */}
+                <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 p-4 border-b border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-white font-medium">피드백 반영 수정 답안</span>
+                    </div>
+                    <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
+                      평가위원 피드백 기반
+                    </span>
+                  </div>
+                </div>
+
+                {/* 모범답안 내용 */}
+                <div className="p-6">
+                  <div className="prose prose-invert max-w-none">
+                    <div className="whitespace-pre-wrap text-gray-300 leading-relaxed">
+                      {modelAnswer}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 복사 버튼 */}
+                <div className="p-4 border-t border-gray-700 bg-gray-800/50 flex justify-between items-center">
+                  <p className="text-xs text-gray-500">
+                    본 답안은 AI가 생성한 참고용 답안입니다.
+                  </p>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(modelAnswer)
+                      alert('모범 답안이 클립보드에 복사되었습니다.')
+                    }}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white text-sm transition-colors flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    복사하기
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
 
       {/* OCR Result Toggle */}

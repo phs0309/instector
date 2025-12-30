@@ -1,4 +1,4 @@
-import { Evaluator, EvaluatorType, StructureAnalysis } from '@/types'
+import { Evaluator, EvaluatorType, EngineerField, StructureAnalysis } from '@/types'
 
 // 공통 컨텍스트: 기술사 시험 이해 및 평가 철학
 const COMMON_CONTEXT = `[기술사 시험 이해]
@@ -98,101 +98,120 @@ export const evaluators: Record<EvaluatorType, Evaluator> = {
   },
 }
 
-// 구조 분석가 프롬프트
+// 구조 분석가 프롬프트 - 한국 국가기술자격 기술사 종목 기반
 export const getStructureAnalysisPrompt = (extractedText: string): string => {
   return `[역할]
-당신은 기술사 답안의 구조와 형식을 전문적으로 분석하는 구조 분석가입니다.
-평가위원들이 효율적으로 채점할 수 있도록 답안의 구조적 특성을 사전에 분석합니다.
+당신은 한국 국가기술자격 기술사 시험 답안을 분석하는 전문가입니다.
+답안 내용을 분석하여 어떤 기술사 종목의 답안인지 정확히 판별하고,
+해당 기술사 평가 기준에 맞춰 구조를 분석합니다.
 
 [답안 내용]
 ${extractedText}
 
-[분석 항목]
-1. 답안 구조
-   - 개요도/서론 포함 여부
-   - 본론의 논리적 전개 (주장-근거-예시)
-   - 결론 및 향후 전망 포함 여부
+[한국 국가기술자격 기술사 종목 - 반드시 아래 목록에서 선택]
 
-2. 도식 활용
-   - 표, 그림, 다이어그램 사용 여부
-   - 도식의 적절성과 가독성
+■ 정보통신 분야
+1. 정보관리기술사
+   - 키워드: EA, ISP, IT거버넌스, ITSM, ITIL, COBIT, 데이터 거버넌스, MDM, 빅데이터, ERP, SCM, CRM, BI, 디지털전환, PMO
 
-3. 핵심 키워드
-   - 답안에 포함된 주요 기술 용어
-   - 누락된 것으로 보이는 필수 키워드
+2. 컴퓨터시스템응용기술사
+   - 키워드: SDLC, 애자일, DevOps, CI/CD, MSA, SOA, 디자인패턴, 알고리즘, 자료구조, 운영체제, AI/ML, 딥러닝
 
-4. 분량 및 가독성
-   - 예상 분량 (페이지 수 추정)
-   - 문단 구분 및 가독성
+3. 정보통신기술사
+   - 키워드: OSI 7계층, TCP/IP, 라우팅, 스위칭, SDN, NFV, 5G, LTE, Wi-Fi, 암호화, PKI, 방화벽, VPN, 클라우드
 
-5. 기술 분야 판단 (매우 중요 - 아래 기준으로 정확히 판단)
+■ 전기·전자 분야
+4. 전자응용기술사
+   - 키워드: 임베디드, MCU, RTOS, ASIC, FPGA, PCB, 반도체, IoT, 디지털회로, 신호처리
 
-[기술사 분야별 핵심 키워드 - 반드시 이 기준으로 분야를 판단하세요]
+5. 전기응용기술사
+   - 키워드: 전력계통, 송배전, 변압기, 차단기, 수변전설비, 전력품질, 역률, 고조파
 
-★ 정보관리기술사 (ITA):
-- 핵심 주제: EA(엔터프라이즈 아키텍처), ISP(정보화전략계획), IT거버넌스, ITSM, ITIL, COBIT
-- 데이터: 데이터 거버넌스, 마스터데이터관리(MDM), 메타데이터, 데이터 품질, 빅데이터, 데이터웨어하우스
-- 시스템: ERP, SCM, CRM, KMS, BPM, BI, 레거시 시스템, 차세대 시스템
-- 경영/전략: IT투자평가, TCO, ROI, IT아웃소싱, 디지털전환, 정보화사업관리(PMO)
-- 법규: 개인정보보호법, 전자정부법, 클라우드 발전법
+6. 전기철도기술사
+   - 키워드: 전차선, 급전시스템, 철도신호, ATC, ATP, CBTC
 
-★ 컴퓨터시스템응용기술사 (CSA):
-- 소프트웨어공학: SDLC, 애자일, 스크럼, 데브옵스, CI/CD, 리팩토링, 테스트(TDD, BDD)
-- 아키텍처: MSA(마이크로서비스), SOA, 레이어드 아키텍처, 클린 아키텍처, 디자인패턴
-- 알고리즘: 정렬, 탐색, 그래프, 동적프로그래밍, 자료구조, 시간복잡도, 공간복잡도
-- 프로그래밍: 객체지향, 함수형, SOLID 원칙, 코드 품질, 코드 리뷰
-- 시스템: 운영체제, 프로세스, 스레드, 메모리 관리, 가비지 컬렉션
-- AI/ML: 기계학습, 딥러닝, 신경망, 자연어처리(NLP), 컴퓨터비전
+■ 기계·건설 분야
+7. 기계기술사
+   - 키워드: 열역학, 유체역학, 재료역학, 기계설계, CAD/CAM, 자동화
 
-★ 정보통신기술사 (ICT):
-- 네트워크: OSI 7계층, TCP/IP, 라우팅(OSPF, BGP), 스위칭(VLAN), SDN, NFV
-- 무선통신: 5G, LTE, Wi-Fi, 블루투스, LPWAN(LoRa, NB-IoT)
-- 보안: 암호화(AES, RSA), PKI, 방화벽, IDS/IPS, 제로트러스트, SIEM
-- 프로토콜: HTTP, DNS, DHCP, SSL/TLS, VPN, IPSec
-- 인프라: 데이터센터, CDN, 로드밸런싱, HA(고가용성), DR(재해복구)
-- 클라우드: IaaS, PaaS, SaaS, 컨테이너, 쿠버네티스, 도커
+8. 건축기계설비기술사
+   - 키워드: 공조설비, 냉난방, 환기, 배관, 위생설비
 
-★ 전자응용기술사 (EE):
-- 임베디드: MCU, RTOS, 펌웨어, 디바이스 드라이버, 부트로더
-- 하드웨어: ASIC, FPGA, PCB, 반도체, 센서, 액추에이터
-- IoT: 사물인터넷 아키텍처, 엣지 컴퓨팅, 게이트웨이, 스마트 디바이스
-- 전자회로: 디지털 회로, 아날로그 회로, 전력 전자, 신호 처리
-- 제어: PID 제어, 모터 제어, 자동화 시스템, PLC, SCADA
+9. 건설기계기술사
+   - 키워드: 굴삭기, 크레인, 콘크리트펌프, 건설장비
 
-★ 판단 규칙:
-1. 답안에서 가장 많이 언급된 분야의 키워드를 찾으세요
-2. 주제의 핵심이 무엇인지 파악하세요 (경영/전략 vs 개발/기술 vs 네트워크/보안 vs 하드웨어)
-3. 확실하지 않으면 "기타"가 아닌, 가장 유사한 분야로 판단하세요
-4. 복합적인 주제는 핵심 관점에서 판단하세요 (예: 클라우드 보안 → 정보통신기술사)
+10. 토목구조기술사
+    - 키워드: 구조해석, 교량, 터널, 기초공학, 콘크리트구조
+
+11. 토질및기초기술사
+    - 키워드: 지반조사, 기초설계, 연약지반, 사면안정, 흙막이
+
+12. 건축구조기술사
+    - 키워드: 건축구조설계, 내진설계, 철골구조, RC구조
+
+■ 화학·환경 분야
+13. 화공기술사
+    - 키워드: 반응공학, 분리공정, 촉매, 플랜트, 공정설계
+
+14. 대기관리기술사
+    - 키워드: 대기오염, 배출가스, 집진, 탈황, 탈질
+
+15. 수질관리기술사
+    - 키워드: 하수처리, 정수처리, 수질오염, BOD, COD
+
+16. 소음진동기술사
+    - 키워드: 소음측정, 방음, 진동제어, 차음
+
+■ 안전·품질 분야
+17. 산업안전기술사
+    - 키워드: 안전관리, 위험성평가, 산업재해, PSM, KOSHA
+
+18. 건설안전기술사
+    - 키워드: 건설현장안전, 가시설, 추락방지, 안전관리계획
+
+19. 소방기술사
+    - 키워드: 소방설비, 스프링클러, 화재감지, 피난설비
+
+20. 품질관리기술사
+    - 키워드: QC, QA, 통계적품질관리, 6시그마, ISO
+
+■ 기타 분야
+21. 측량및지형공간정보기술사
+    - 키워드: GPS, GIS, 측량, 지적, 항공사진
+
+22. 발송배전기술사
+    - 키워드: 발전소, 송전, 배전, 전력계통, 계전기
+
+23. 식품기술사
+    - 키워드: 식품가공, 식품위생, HACCP, 품질관리
+
+[분석 지침]
+1. 답안에서 언급된 핵심 키워드를 추출하세요
+2. 키워드와 문맥을 분석하여 가장 적합한 기술사 종목을 판별하세요
+3. 여러 분야가 혼합된 경우 주제의 핵심 관점에서 판단하세요
+4. 위 목록에 없는 경우에만 "기타"로 분류하세요
 
 [응답 형식]
 반드시 아래 JSON 형식으로만 응답하세요:
 {
+  "detectedField": "정보관리기술사",
+  "fieldCategory": "정보통신",
+  "confidence": 95,
+  "detectionReason": "EA, ISP, IT거버넌스 등 정보관리 핵심 키워드가 다수 발견됨",
+  "keywords": {
+    "found": ["키워드1", "키워드2", "키워드3"],
+    "fieldSpecific": ["해당 기술사 분야 특화 키워드"],
+    "missing": ["누락된 것으로 보이는 키워드"]
+  },
   "structure": {
     "hasOutline": true,
     "hasIntro": true,
     "hasBody": true,
     "hasConclusion": true,
-    "structureComment": "구조에 대한 한 줄 평가"
+    "structureComment": "구조에 대한 평가"
   },
-  "diagrams": {
-    "hasDiagram": false,
-    "diagramTypes": [],
-    "diagramComment": "도식 활용에 대한 한 줄 평가"
-  },
-  "keywords": {
-    "found": ["키워드1", "키워드2"],
-    "missing": ["누락 추정 키워드1"],
-    "keywordComment": "키워드에 대한 한 줄 평가"
-  },
-  "format": {
-    "estimatedPages": 3.0,
-    "readability": "중",
-    "formatComment": "분량 및 가독성에 대한 한 줄 평가"
-  },
-  "detectedField": "정보관리기술사",
   "overallStructureScore": 70,
-  "structureSummary": "전체 구조 분석 요약 (2-3문장)"
+  "structureSummary": "전체 분석 요약 (2-3문장)"
 }`
 }
 
@@ -203,27 +222,24 @@ export const getEvaluatorPrompt = (
   structureAnalysis?: StructureAnalysis
 ): string => {
   const structureSection = structureAnalysis
-    ? `[사전 구조 분석 결과]
-기술 분야: ${structureAnalysis.detectedField}
-구조 점수: ${structureAnalysis.overallStructureScore}/100
-구조 요약: ${structureAnalysis.structureSummary}
+    ? `[★★★ 기술사 종목 확정 - 반드시 이 기준으로 평가하세요 ★★★]
+📋 시험 종목: ${structureAnalysis.detectedField}
+📂 분야: ${structureAnalysis.fieldCategory || '정보통신'}
+🎯 판별 신뢰도: ${structureAnalysis.confidence || 90}%
+📝 판별 근거: ${structureAnalysis.detectionReason || '키워드 분석 기반'}
 
-- 답안 구조: ${structureAnalysis.structure.structureComment}
-- 도식 활용: ${structureAnalysis.diagrams.diagramComment}
-- 핵심 키워드: ${structureAnalysis.keywords.found.join(', ')}
-- 누락 추정: ${structureAnalysis.keywords.missing.join(', ') || '없음'}
-- 가독성: ${structureAnalysis.format.readability}
+[사전 분석 결과]
+- 구조 점수: ${structureAnalysis.overallStructureScore}/100
+- 구조 요약: ${structureAnalysis.structureSummary}
+- 발견된 핵심 키워드: ${structureAnalysis.keywords.found?.join(', ') || '분석 중'}
+- 분야 특화 키워드: ${structureAnalysis.keywords.fieldSpecific?.join(', ') || '분석 중'}
+- 누락 추정 키워드: ${structureAnalysis.keywords.missing?.join(', ') || '없음'}
 
-위 구조 분석 결과를 참고하여 평가하세요.
-이미 분석된 구조적 특성을 기반으로 내용의 질적 평가에 집중하세요.
+⚠️ 중요: 위에서 확정된 "${structureAnalysis.detectedField}" 시험의 평가 기준에 맞춰 평가하세요.
+해당 기술사 종목에서 요구하는 핵심 역량과 지식 수준을 기준으로 채점하세요.
 `
-    : `[기술 분야 자동 판단]
-답안 내용을 분석하여 해당하는 기술사 분야를 판단하세요:
-- 정보관리기술사 (데이터베이스, 정보시스템, IT경영, 데이터 분석 등)
-- 컴퓨터시스템응용기술사 (소프트웨어공학, 시스템 아키텍처, 알고리즘 등)
-- 정보통신기술사 (네트워크, 보안, 통신 프로토콜 등)
-- 전자응용기술사 (임베디드, 하드웨어, IoT 등)
-- 기타
+    : `[기술 분야 미확정 - 내용 기반 판단 필요]
+답안 내용을 분석하여 해당하는 기술사 종목을 판단한 후 평가하세요.
 `
 
   return `${evaluator.style}
@@ -231,6 +247,86 @@ export const getEvaluatorPrompt = (
 ${COMMON_CONTEXT}
 
 ${structureSection}
+
+[평가 중점 사항]
+${evaluator.focus.join(', ')}
+
+[답안 내용]
+${extractedText}
+
+[평가 지침]
+1. **100점 만점** 기준으로 점수를 부여하세요.
+2. **합격 기준은 60점**입니다. 핵심을 이해하고 기본 구조를 갖추면 합격권입니다.
+3. 강점 3가지와 보완점 3가지를 구체적으로 제시하세요. (보완점은 개선 방향 포함)
+4. 세부 평가 (각 항목 0-20점, 총 100점):
+   - 이론적 정확성 (theory): 핵심 개념 이해도
+   - 실무 적용성 (practical): 현장 적용 가능성
+   - 답안 구조 (structure): 논리적 전개
+   - 표현력 (expression): 명확한 표현
+   - 완성도 (completeness): 전체적 완결성
+5. **답안의 실제 내용을 인용**하여 평가하세요.
+6. 핵심 포인트(keyPoints)에는 이 답안의 강점을 3-5개 선정하세요.
+7. 전체적인 코멘트는 격려와 함께 구체적인 개선 방향을 제시하세요.
+
+[응답 형식]
+반드시 아래 JSON 형식으로만 응답하세요:
+{
+  "score": 72,
+  "strengths": ["강점1 - 구체적 설명", "강점2 - 구체적 설명", "강점3 - 구체적 설명"],
+  "weaknesses": ["보완점1 - 개선방향 포함", "보완점2 - 개선방향 포함", "보완점3 - 개선방향 포함"],
+  "comment": "전체적인 평가와 격려, 구체적 개선 방향 (2-3문장)",
+  "keyPoints": ["핵심 포인트1", "핵심 포인트2", "핵심 포인트3"],
+  "detailedFeedback": {
+    "theory": {
+      "score": 14,
+      "comment": "이론적 정확성에 대한 평가와 보완 방향",
+      "quotes": [
+        {
+          "quote": "답안에서 인용한 부분",
+          "evaluation": "해당 인용에 대한 구체적인 평가",
+          "isPositive": true
+        }
+      ]
+    },
+    "practical": {
+      "score": 15,
+      "comment": "실무 적용성에 대한 평가와 보완 방향",
+      "quotes": []
+    },
+    "structure": {
+      "score": 14,
+      "comment": "답안 구조에 대한 평가와 보완 방향",
+      "quotes": []
+    },
+    "expression": {
+      "score": 15,
+      "comment": "표현력에 대한 평가와 보완 방향",
+      "quotes": []
+    },
+    "completeness": {
+      "score": 14,
+      "comment": "완성도에 대한 평가와 보완 방향",
+      "quotes": []
+    }
+  }
+}`
+}
+
+// 평가위원 프롬프트 (선택된 기술사 종목 사용)
+export const getEvaluatorPromptWithField = (
+  evaluator: Evaluator,
+  extractedText: string,
+  selectedField: EngineerField
+): string => {
+  return `${evaluator.style}
+
+${COMMON_CONTEXT}
+
+[★★★ 기술사 종목 - 반드시 이 기준으로 평가하세요 ★★★]
+📋 시험 종목: ${selectedField}
+
+⚠️ 중요: "${selectedField}" 시험의 평가 기준에 맞춰 평가하세요.
+해당 기술사 종목에서 요구하는 핵심 역량과 지식 수준을 기준으로 채점하세요.
 
 [평가 중점 사항]
 ${evaluator.focus.join(', ')}

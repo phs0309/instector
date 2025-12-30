@@ -1,16 +1,56 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import ImageUploader from '@/components/ImageUploader'
 import OCRPreview from '@/components/OCRPreview'
-import { UploadedImage, ComprehensiveResult, StructureAnalysis } from '@/types'
+import { UploadedImage, ComprehensiveResult, EngineerField } from '@/types'
+
+// 기술사 종목 목록
+const engineerFields: { value: EngineerField; label: string; category: string }[] = [
+  // 정보통신 분야
+  { value: '정보관리기술사', label: '정보관리기술사', category: '정보통신' },
+  { value: '컴퓨터시스템응용기술사', label: '컴퓨터시스템응용기술사', category: '정보통신' },
+  { value: '정보통신기술사', label: '정보통신기술사', category: '정보통신' },
+  // 전기·전자 분야
+  { value: '전자응용기술사', label: '전자응용기술사', category: '전기·전자' },
+  { value: '전기응용기술사', label: '전기응용기술사', category: '전기·전자' },
+  { value: '전기철도기술사', label: '전기철도기술사', category: '전기·전자' },
+  // 기계·건설 분야
+  { value: '기계기술사', label: '기계기술사', category: '기계·건설' },
+  { value: '건축기계설비기술사', label: '건축기계설비기술사', category: '기계·건설' },
+  { value: '건설기계기술사', label: '건설기계기술사', category: '기계·건설' },
+  { value: '토목구조기술사', label: '토목구조기술사', category: '기계·건설' },
+  { value: '토질및기초기술사', label: '토질및기초기술사', category: '기계·건설' },
+  { value: '건축구조기술사', label: '건축구조기술사', category: '기계·건설' },
+  // 화학·환경 분야
+  { value: '화공기술사', label: '화공기술사', category: '화학·환경' },
+  { value: '대기관리기술사', label: '대기관리기술사', category: '화학·환경' },
+  { value: '수질관리기술사', label: '수질관리기술사', category: '화학·환경' },
+  { value: '소음진동기술사', label: '소음진동기술사', category: '화학·환경' },
+  // 안전·품질 분야
+  { value: '산업안전기술사', label: '산업안전기술사', category: '안전·품질' },
+  { value: '건설안전기술사', label: '건설안전기술사', category: '안전·품질' },
+  { value: '소방기술사', label: '소방기술사', category: '안전·품질' },
+  { value: '품질관리기술사', label: '품질관리기술사', category: '안전·품질' },
+  // 기타 분야
+  { value: '측량및지형공간정보기술사', label: '측량및지형공간정보기술사', category: '기타' },
+  { value: '발송배전기술사', label: '발송배전기술사', category: '기타' },
+  { value: '식품기술사', label: '식품기술사', category: '기타' },
+]
+
+// 카테고리별 그룹핑
+const fieldsByCategory = engineerFields.reduce((acc, field) => {
+  if (!acc[field.category]) acc[field.category] = []
+  acc[field.category].push(field)
+  return acc
+}, {} as Record<string, typeof engineerFields>)
 
 // Dynamic import for ShaderCanvas to avoid SSR issues with WebGL
 const ShaderCanvas = dynamic(() => import('@/components/ShaderCanvas'), {
   ssr: false,
-  loading: () => <div className="w-80 h-80 bg-gray-800 rounded-full animate-pulse" />,
+  loading: () => <div className="w-32 h-32 bg-gray-800 rounded-full animate-pulse" />,
 })
 
 type Step = 'upload' | 'ocr-review' | 'evaluating'
@@ -18,16 +58,11 @@ type Step = 'upload' | 'ocr-review' | 'evaluating'
 interface EvaluatorProgress {
   id: string
   name: string
+  persona: string
   status: 'pending' | 'loading' | 'complete'
   score?: number
   shaderId: number
-}
-
-interface StructureAnalysisProgress {
-  status: 'pending' | 'loading' | 'complete'
-  detectedField?: string
-  structureScore?: number
-  analysisResult?: StructureAnalysis // 구조 분석 결과 전체
+  timeOffset: number  // 각 셰이더가 다르게 움직이도록 시간 오프셋
 }
 
 export default function Home() {
@@ -35,81 +70,16 @@ export default function Home() {
   const [images, setImages] = useState<UploadedImage[]>([])
   const [step, setStep] = useState<Step>('upload')
   const [isLoading, setIsLoading] = useState(false)
-  const [loadingStage, setLoadingStage] = useState<'ocr' | 'evaluating' | 'analyzing'>('ocr')
+  const [loadingStage, setLoadingStage] = useState<'ocr' | 'evaluating' | 'comprehensive'>('ocr')
+  const [selectedField, setSelectedField] = useState<EngineerField>('정보관리기술사')
   const [error, setError] = useState<string | null>(null)
   const [ocrText, setOcrText] = useState<string>('')
   const [ocrConfidence, setOcrConfidence] = useState<number>(0)
   const [evaluatorProgress, setEvaluatorProgress] = useState<EvaluatorProgress[]>([
-    { id: 'A', name: '김학술 (학자형)', status: 'pending', shaderId: 1 },
-    { id: 'B', name: '박실무 (실무형)', status: 'pending', shaderId: 2 },
-    { id: 'C', name: '이균형 (교육자형)', status: 'pending', shaderId: 3 },
+    { id: 'A', name: '김학술', persona: '이론 전문가형', status: 'pending', shaderId: 1, timeOffset: 0 },
+    { id: 'B', name: '박실무', persona: '실무 전문가형', status: 'pending', shaderId: 2, timeOffset: 3.3 },
+    { id: 'C', name: '이균형', persona: '합격 가이드형', status: 'pending', shaderId: 3, timeOffset: 6.7 },
   ])
-  const [structureProgress, setStructureProgress] = useState<StructureAnalysisProgress>({
-    status: 'pending',
-  })
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const [analysisMessages, setAnalysisMessages] = useState<string[]>([])
-  const [currentMessage, setCurrentMessage] = useState('')
-
-  // 구조 분석 중 실시간 메시지 표시
-  const structureAnalysisSteps = [
-    '답안 텍스트 파싱 중...',
-    '문단 구조 분석 중...',
-    '서론/본론/결론 구조 확인 중...',
-    '개요도 및 도식 탐지 중...',
-    '핵심 키워드 추출 중...',
-    '기술 분야 판별 중...',
-    '누락 키워드 분석 중...',
-    '가독성 평가 중...',
-    '분량 측정 중...',
-    '구조 점수 산출 중...',
-  ]
-
-  // 구조 분석 메시지 순차 표시
-  useEffect(() => {
-    if (structureProgress.status !== 'loading') {
-      setAnalysisMessages([])
-      setCurrentMessage('')
-      return
-    }
-
-    let messageIndex = 0
-    const interval = setInterval(() => {
-      if (messageIndex < structureAnalysisSteps.length) {
-        setCurrentMessage(structureAnalysisSteps[messageIndex])
-        if (messageIndex > 0) {
-          setAnalysisMessages(prev => [...prev.slice(-2), structureAnalysisSteps[messageIndex - 1]])
-        }
-        messageIndex++
-      } else {
-        // 마지막 메시지 후 처음부터 반복
-        messageIndex = 0
-        setAnalysisMessages([])
-      }
-    }, 500)
-
-    return () => clearInterval(interval)
-  }, [structureProgress.status])
-
-  // 슬라이드 자동 전환
-  useEffect(() => {
-    if (step !== 'evaluating') {
-      setCurrentSlide(0)
-      return
-    }
-
-    // 구조 분석 완료 시 슬라이드 1로 이동
-    if (structureProgress.status === 'complete' && currentSlide === 0) {
-      setCurrentSlide(1)
-    }
-
-    // 평가위원 완료 시 다음 슬라이드로 이동
-    evaluatorProgress.forEach((e, idx) => {
-      if (e.status === 'complete' && currentSlide === idx + 1) {
-        setCurrentSlide(idx + 2)
-      }
-    })
-  }, [step, structureProgress.status, evaluatorProgress, currentSlide])
 
   const handleOCR = async () => {
     if (images.length === 0) {
@@ -166,82 +136,94 @@ export default function Home() {
     setLoadingStage('evaluating')
 
     // Reset progress states
-    setStructureProgress({ status: 'pending' })
     setEvaluatorProgress([
-      { id: 'A', name: '김학술 (학자형)', status: 'pending', shaderId: 1 },
-      { id: 'B', name: '박실무 (실무형)', status: 'pending', shaderId: 2 },
-      { id: 'C', name: '이균형 (교육자형)', status: 'pending', shaderId: 3 },
+      { id: 'A', name: '김학술', persona: '이론 전문가형', status: 'pending', shaderId: 1, timeOffset: 0 },
+      { id: 'B', name: '박실무', persona: '실무 전문가형', status: 'pending', shaderId: 2, timeOffset: 3.3 },
+      { id: 'C', name: '이균형', persona: '합격 가이드형', status: 'pending', shaderId: 3, timeOffset: 6.7 },
     ])
 
     try {
-      // 구조 분석 시작 표시
-      setStructureProgress({ status: 'loading' })
-
-      const response = await fetch('/api/evaluate', {
+      // SSE 스트리밍 연결 (선택한 기술사 종목 전달)
+      const response = await fetch('/api/evaluate-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ extractedText: ocrText }),
+        body: JSON.stringify({ extractedText: ocrText, selectedField }),
       })
 
       if (!response.ok) {
         throw new Error('평가 요청 실패')
       }
 
-      const data = await response.json()
-
-      if (!data.success) {
-        throw new Error(data.error || '평가 중 오류가 발생했습니다.')
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('스트림을 읽을 수 없습니다.')
       }
 
-      const result: ComprehensiveResult = data.data
+      const decoder = new TextDecoder()
+      let finalResult: ComprehensiveResult | null = null
 
-      // 구조 분석 완료 표시
-      if (result.structureAnalysis) {
-        setStructureProgress({
-          status: 'complete',
-          detectedField: result.structureAnalysis.detectedField,
-          structureScore: result.structureAnalysis.overallStructureScore,
-          analysisResult: result.structureAnalysis,
-        })
-      }
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
 
-      // 짧은 딜레이 후 슬라이드 전환
-      await new Promise(resolve => setTimeout(resolve, 800))
+        const chunk = decoder.decode(value)
+        const lines = chunk.split('\n')
 
-      // 평가위원 결과 순차 표시 (애니메이션 효과)
-      if (result.evaluations) {
-        for (let i = 0; i < result.evaluations.length; i++) {
-          const evaluation = result.evaluations[i]
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const event = JSON.parse(line.slice(6))
 
-          // 현재 평가위원 로딩 표시
-          setEvaluatorProgress(prev =>
-            prev.map((e, idx) =>
-              idx === i ? { ...e, status: 'loading' } : e
-            )
-          )
+              switch (event.type) {
+                case 'evaluator-start':
+                  setEvaluatorProgress(prev =>
+                    prev.map(e =>
+                      e.id === event.evaluatorId ? { ...e, status: 'loading' } : e
+                    )
+                  )
+                  break
 
-          // 짧은 딜레이 (애니메이션)
-          await new Promise(resolve => setTimeout(resolve, 600))
+                case 'evaluator-complete':
+                  setEvaluatorProgress(prev =>
+                    prev.map(e =>
+                      e.id === event.evaluatorId
+                        ? { ...e, status: 'complete', score: event.data.score }
+                        : e
+                    )
+                  )
+                  break
 
-          // 완료 표시
-          setEvaluatorProgress(prev =>
-            prev.map((e, idx) =>
-              idx === i ? { ...e, status: 'complete', score: evaluation.score } : e
-            )
-          )
+                case 'comprehensive-start':
+                  setLoadingStage('comprehensive')
+                  break
 
-          // 다음 평가위원 전에 잠깐 대기
-          await new Promise(resolve => setTimeout(resolve, 400))
+                case 'comprehensive-complete':
+                  // 종합 분석 완료
+                  break
+
+                case 'complete':
+                  finalResult = event.data
+                  break
+
+                case 'error':
+                  throw new Error(event.data.message)
+              }
+            } catch (parseError) {
+              // JSON 파싱 실패 시 무시 (불완전한 청크일 수 있음)
+              if (parseError instanceof SyntaxError) continue
+              throw parseError
+            }
+          }
         }
       }
 
-      // 종합 분석 표시
-      setLoadingStage('analyzing')
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      sessionStorage.setItem('evaluationResult', JSON.stringify(result))
-      sessionStorage.setItem('extractedText', ocrText)
-      router.push('/result')
+      if (finalResult) {
+        sessionStorage.setItem('evaluationResult', JSON.stringify(finalResult))
+        sessionStorage.setItem('extractedText', ocrText)
+        router.push('/result')
+      } else {
+        throw new Error('평가 결과를 받지 못했습니다.')
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '평가 중 오류가 발생했습니다.')
       setStep('ocr-review')
@@ -256,15 +238,21 @@ export default function Home() {
     setOcrConfidence(0)
   }
 
+  // 완료된 평가위원 수 계산
+  const completedCount = evaluatorProgress.filter(e => e.status === 'complete').length
+  const allComplete = completedCount === 3
+
   return (
     <div className="space-y-8 pb-8">
       {/* Hero Section - only show on upload and ocr-review steps */}
       {step !== 'evaluating' && (
-        <div className={`text-center py-8 transition-all duration-700 ease-out ${step === 'upload' ? 'opacity-100 translate-y-0' : 'opacity-100 translate-y-0'}`}>
-          <div className="flex justify-center items-center mb-6">
-            <ShaderCanvas size={320} shaderId={1} isActive={true} />
+        <div className={`text-center py-12 transition-all duration-700 ease-out ${step === 'upload' ? 'opacity-100 translate-y-0' : 'opacity-100 translate-y-0'}`}>
+          <div className="flex justify-center items-center mb-8 relative">
+            {/* 배경 글로우 효과 */}
+            <div className="absolute w-[400px] h-[400px] bg-purple-600/20 rounded-full blur-3xl" />
+            <ShaderCanvas size={320} shaderId={2} isActive={true} />
           </div>
-          <h2 className="text-2xl font-bold text-white transition-opacity duration-500">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-transparent transition-opacity duration-500">
             AI 기술사 답안 평가 서비스
           </h2>
         </div>
@@ -298,23 +286,67 @@ export default function Home() {
         {step === 'upload' && (
           <>
             {/* Main Form */}
-            <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6 space-y-6 animate-fadeIn">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">
+            <div className="relative bg-gradient-to-b from-gray-900 to-gray-950 rounded-3xl border border-gray-800/50 p-8 space-y-8 animate-fadeIn shadow-2xl shadow-purple-900/10">
+              {/* 배경 장식 */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-600/5 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="relative">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-200 mb-4">
+                  <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
                   답안지 이미지 업로드
                 </label>
-                <p className="text-xs text-gray-500 mb-3">
-                  기술사 분야는 AI가 답안 내용을 분석하여 자동으로 판단합니다.
-                </p>
                 <ImageUploader images={images} onImagesChange={setImages} />
               </div>
 
-              {error && (
-                <div className="bg-red-900/30 border border-red-800 rounded-xl p-4 text-red-400 flex items-center gap-3">
-                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              {/* 기술사 종목 선택 */}
+              <div className="relative">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-200 mb-4">
+                  <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  {error}
+                  기술사 시험 종목 선택
+                </label>
+                <div className="relative">
+                  <select
+                    value={selectedField}
+                    onChange={(e) => setSelectedField(e.target.value as EngineerField)}
+                    className="w-full px-5 py-4 bg-gray-800/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all appearance-none cursor-pointer"
+                  >
+                    {Object.entries(fieldsByCategory).map(([category, fields]) => (
+                      <optgroup key={category} label={`━━ ${category} ━━`}>
+                        {fields.map((field) => (
+                          <option key={field.value} value={field.value}>
+                            {field.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-3 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  평가 기준이 되는 기술사 종목을 선택하세요
+                </p>
+              </div>
+
+              {error && (
+                <div className="bg-red-950/50 border border-red-900/50 rounded-2xl p-5 text-red-400 flex items-center gap-4 backdrop-blur-sm">
+                  <div className="w-10 h-10 bg-red-900/50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <span className="text-sm">{error}</span>
                 </div>
               )}
 
@@ -322,22 +354,25 @@ export default function Home() {
                 onClick={handleOCR}
                 disabled={images.length === 0 || isLoading}
                 className={`
-                  w-full py-4 rounded-xl font-bold text-lg transition-all duration-200 flex items-center justify-center gap-2
+                  relative w-full py-5 rounded-2xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-3 overflow-hidden
                   ${images.length > 0 && !isLoading
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/25'
-                    : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                    ? 'bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-600 text-white hover:shadow-xl hover:shadow-purple-500/30 hover:scale-[1.02] active:scale-[0.98]'
+                    : 'bg-gray-800/50 text-gray-500 cursor-not-allowed border border-gray-700/50'
                   }
                 `}
               >
+                {images.length > 0 && !isLoading && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer" />
+                )}
                 {isLoading ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     손글씨 인식 중...
                   </>
                 ) : (
                   <>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                     손글씨 텍스트로 변환하기
                   </>
@@ -346,39 +381,48 @@ export default function Home() {
             </div>
 
             {/* Features - moved below image upload */}
-            <div className="grid md:grid-cols-3 gap-6 mt-8">
-              <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 hover:border-gray-700 transition-all duration-300 hover:scale-[1.02]">
-                <div className="w-12 h-12 bg-blue-900/50 rounded-xl flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+            <div className="grid md:grid-cols-3 gap-6 mt-10">
+              <div className="group relative bg-gradient-to-br from-gray-900 to-gray-950 p-6 rounded-2xl border border-gray-800/50 hover:border-indigo-500/30 transition-all duration-500 hover:shadow-lg hover:shadow-indigo-500/10">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative">
+                  <div className="w-14 h-14 bg-gradient-to-br from-indigo-600/20 to-indigo-600/5 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+                    <svg className="w-7 h-7 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-bold text-white mb-2 text-lg">손글씨 인식</h3>
+                  <p className="text-sm text-gray-400 leading-relaxed">
+                    Google Vision AI가 손글씨를 정확하게 텍스트로 변환합니다.
+                  </p>
                 </div>
-                <h3 className="font-bold text-white mb-2">손글씨 인식</h3>
-                <p className="text-sm text-gray-400">
-                  AI가 손글씨를 정확하게 텍스트로 변환합니다.
-                </p>
               </div>
-              <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 hover:border-gray-700 transition-all duration-300 hover:scale-[1.02]">
-                <div className="w-12 h-12 bg-purple-900/50 rounded-xl flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
+              <div className="group relative bg-gradient-to-br from-gray-900 to-gray-950 p-6 rounded-2xl border border-gray-800/50 hover:border-purple-500/30 transition-all duration-500 hover:shadow-lg hover:shadow-purple-500/10">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative">
+                  <div className="w-14 h-14 bg-gradient-to-br from-purple-600/20 to-purple-600/5 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+                    <svg className="w-7 h-7 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-bold text-white mb-2 text-lg">3인 AI 평가위원</h3>
+                  <p className="text-sm text-gray-400 leading-relaxed">
+                    학자형, 실무형, 교육자형 3가지 관점으로 다각적 평가를 진행합니다.
+                  </p>
                 </div>
-                <h3 className="font-bold text-white mb-2">3인 평가위원</h3>
-                <p className="text-sm text-gray-400">
-                  학자형, 실무형, 교육자형 3가지 관점으로 다각적 평가를 진행합니다.
-                </p>
               </div>
-              <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 hover:border-gray-700 transition-all duration-300 hover:scale-[1.02]">
-                <div className="w-12 h-12 bg-green-900/50 rounded-xl flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
+              <div className="group relative bg-gradient-to-br from-gray-900 to-gray-950 p-6 rounded-2xl border border-gray-800/50 hover:border-emerald-500/30 transition-all duration-500 hover:shadow-lg hover:shadow-emerald-500/10">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative">
+                  <div className="w-14 h-14 bg-gradient-to-br from-emerald-600/20 to-emerald-600/5 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+                    <svg className="w-7 h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <h3 className="font-bold text-white mb-2 text-lg">맞춤형 학습 가이드</h3>
+                  <p className="text-sm text-gray-400 leading-relaxed">
+                    취약점을 분석하고 합격을 위한 맞춤형 학습 방향을 제시합니다.
+                  </p>
                 </div>
-                <h3 className="font-bold text-white mb-2">학습 가이드</h3>
-                <p className="text-sm text-gray-400">
-                  취약점을 분석하고 맞춤형 학습 방향을 제시합니다.
-                </p>
               </div>
             </div>
           </>
@@ -423,271 +467,167 @@ export default function Home() {
         )}
       </div>
 
-      {/* Step 3: Evaluating - 슬라이드 기반 */}
+      {/* Step 3: Evaluating - 3명 가로 배치 */}
       <div className={`transition-all duration-700 ease-out ${step === 'evaluating' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 hidden'}`}>
         {step === 'evaluating' && (
-          <div className="min-h-[70vh] flex flex-col items-center justify-center animate-fadeIn">
-            {/* 슬라이드 컨테이너 */}
-            <div className="relative w-full overflow-hidden">
-              <div
-                className="flex transition-transform duration-700 ease-out"
-                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-              >
-                {/* 슬라이드 0: 구조 분석 */}
-                <div className="w-full flex-shrink-0 flex flex-col items-center justify-center px-4 py-8">
+          <div className="min-h-[70vh] flex flex-col items-center justify-center animate-fadeIn px-4 relative">
+            {/* 배경 글로우 효과 */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
+              <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl" />
+            </div>
+
+            {/* 타이틀 */}
+            <div className="text-center mb-16 relative">
+              {/* 선택된 기술사 종목 표시 */}
+              <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-gradient-to-r from-purple-900/40 to-indigo-900/40 border border-purple-500/30 rounded-full mb-6 animate-fadeIn backdrop-blur-sm">
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
+                <span className="text-purple-200 font-semibold">{selectedField}</span>
+                <span className="text-purple-400/60 text-sm">시험 답안 평가</span>
+              </div>
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-white via-purple-100 to-white bg-clip-text text-transparent mb-4">
+                {allComplete ? '평가 완료' : 'AI 평가위원 심사 중'}
+              </h2>
+              <p className="text-gray-400 text-lg">
+                {allComplete
+                  ? '모든 평가가 완료되었습니다. 결과를 종합하고 있습니다...'
+                  : `${selectedField} 기준으로 3명의 AI 평가위원이 심사 중입니다`}
+              </p>
+            </div>
+
+            {/* 3명 평가위원 가로 배치 */}
+            {loadingStage === 'evaluating' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl relative">
+              {evaluatorProgress.map((evaluator, index) => (
+                <div
+                  key={evaluator.id}
+                  className={`
+                    group relative flex flex-col items-center p-8 rounded-3xl border transition-all duration-700
+                    ${evaluator.status === 'complete'
+                      ? 'bg-gradient-to-b from-emerald-950/50 to-gray-950 border-emerald-500/50 shadow-2xl shadow-emerald-500/20'
+                      : evaluator.status === 'loading'
+                      ? 'bg-gradient-to-b from-purple-950/50 to-gray-950 border-purple-500/50 shadow-2xl shadow-purple-500/20'
+                      : 'bg-gradient-to-b from-gray-900/80 to-gray-950 border-gray-700/50'
+                    }
+                  `}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  {/* 카드 배경 글로우 */}
+                  {evaluator.status === 'loading' && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-purple-600/10 to-transparent rounded-3xl" />
+                  )}
+
+                  {/* Shader Effect / 완료 체크 */}
                   <div className="relative mb-8">
-                    <div className={`w-80 h-80 bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-full flex items-center justify-center ${structureProgress.status !== 'complete' ? 'animate-pulse' : ''}`}>
-                      <svg className="w-40 h-40 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                      </svg>
-                    </div>
-                    {structureProgress.status === 'loading' && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-72 h-72 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                    {structureProgress.status === 'complete' && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center animate-scaleIn">
-                          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    {evaluator.status === 'complete' ? (
+                      <div className="relative w-56 h-56">
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-green-600/20 rounded-full animate-pulse" />
+                        <div className="absolute inset-4 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                          <svg className="w-16 h-16 text-white animate-scaleIn" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                       </div>
-                    )}
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-2">
-                    {structureProgress.status === 'complete' ? '구조 분석 완료' : '구조 분석 중'}
-                  </h3>
-                  <p className="text-gray-400 text-center mb-4">
-                    {structureProgress.status === 'complete'
-                      ? '답안 구조 분석이 완료되었습니다'
-                      : '답안의 구조와 키워드를 분석하고 있습니다'}
-                  </p>
-
-                  {/* 구조 분석 중 실시간 메시지 */}
-                  {structureProgress.status === 'loading' && (
-                    <div className="w-full max-w-md space-y-2 mt-4">
-                      {/* 이전 메시지들 (흐리게) */}
-                      {analysisMessages.map((msg, idx) => (
-                        <div
-                          key={idx}
-                          className="text-sm text-gray-500 text-center transition-all duration-300 animate-fadeIn"
-                          style={{ opacity: 0.3 + (idx * 0.2) }}
-                        >
-                          <span className="text-green-500 mr-2">✓</span>
-                          {msg}
-                        </div>
-                      ))}
-                      {/* 현재 메시지 (밝게, 깜빡임) */}
-                      {currentMessage && (
-                        <div className="text-sm text-purple-300 text-center font-medium animate-pulse">
-                          <span className="inline-block w-4 h-4 mr-2 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></span>
-                          {currentMessage}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* 구조 분석 결과 표시 */}
-                  {structureProgress.status === 'complete' && structureProgress.analysisResult && (
-                    <div className="w-full max-w-2xl mt-4 space-y-4 animate-fadeIn">
-                      {/* 분야 및 점수 */}
-                      <div className="flex justify-center gap-4">
-                        <div className="px-4 py-2 bg-purple-900/50 rounded-xl border border-purple-600">
-                          <span className="text-purple-300 text-sm">분야</span>
-                          <p className="font-bold text-white">{structureProgress.analysisResult.detectedField}</p>
-                        </div>
-                        <div className="px-4 py-2 bg-purple-900/50 rounded-xl border border-purple-600">
-                          <span className="text-purple-300 text-sm">구조 점수</span>
-                          <p className="font-bold text-white">{structureProgress.analysisResult.overallStructureScore}점</p>
-                        </div>
-                      </div>
-
-                      {/* 구조 분석 상세 */}
-                      <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
-                        <h4 className="text-sm font-medium text-gray-300 mb-3">답안 구조</h4>
-                        <div className="flex flex-wrap gap-2">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            structureProgress.analysisResult.structure.hasOutline
-                              ? 'bg-green-900/50 text-green-300'
-                              : 'bg-gray-700 text-gray-400'
-                          }`}>
-                            {structureProgress.analysisResult.structure.hasOutline ? '✓' : '✗'} 개요도
-                          </span>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            structureProgress.analysisResult.structure.hasIntro
-                              ? 'bg-green-900/50 text-green-300'
-                              : 'bg-gray-700 text-gray-400'
-                          }`}>
-                            {structureProgress.analysisResult.structure.hasIntro ? '✓' : '✗'} 서론
-                          </span>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            structureProgress.analysisResult.structure.hasBody
-                              ? 'bg-green-900/50 text-green-300'
-                              : 'bg-gray-700 text-gray-400'
-                          }`}>
-                            {structureProgress.analysisResult.structure.hasBody ? '✓' : '✗'} 본론
-                          </span>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            structureProgress.analysisResult.structure.hasConclusion
-                              ? 'bg-green-900/50 text-green-300'
-                              : 'bg-gray-700 text-gray-400'
-                          }`}>
-                            {structureProgress.analysisResult.structure.hasConclusion ? '✓' : '✗'} 결론
-                          </span>
-                          {structureProgress.analysisResult.diagrams.hasDiagram && (
-                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-900/50 text-blue-300">
-                              ✓ 도식 포함
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-400 mt-2">
-                          {structureProgress.analysisResult.structure.structureComment}
-                        </p>
-                      </div>
-
-                      {/* 발견된 키워드 */}
-                      <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
-                        <h4 className="text-sm font-medium text-gray-300 mb-3">발견된 키워드</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {structureProgress.analysisResult.keywords.found.slice(0, 8).map((keyword, idx) => (
-                            <span
-                              key={idx}
-                              className="px-3 py-1 bg-green-900/30 text-green-300 rounded-full text-xs"
-                            >
-                              {keyword}
-                            </span>
-                          ))}
-                        </div>
-                        {structureProgress.analysisResult.keywords.missing.length > 0 && (
-                          <>
-                            <h4 className="text-sm font-medium text-gray-300 mt-4 mb-2">보완 추천 키워드</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {structureProgress.analysisResult.keywords.missing.slice(0, 5).map((keyword, idx) => (
-                                <span
-                                  key={idx}
-                                  className="px-3 py-1 bg-yellow-900/30 text-yellow-300 rounded-full text-xs"
-                                >
-                                  {keyword}
-                                </span>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </div>
-
-                      {/* 분량 및 가독성 */}
-                      <div className="flex justify-center gap-4 text-sm">
-                        <div className="text-gray-400">
-                          예상 분량: <span className="text-white font-medium">{structureProgress.analysisResult.format.estimatedPages}페이지</span>
-                        </div>
-                        <div className="text-gray-400">
-                          가독성: <span className={`font-medium ${
-                            structureProgress.analysisResult.format.readability === '상'
-                              ? 'text-green-400'
-                              : structureProgress.analysisResult.format.readability === '중'
-                              ? 'text-yellow-400'
-                              : 'text-red-400'
-                          }`}>{structureProgress.analysisResult.format.readability}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 슬라이드 1-3: 평가위원 A, B, C */}
-                {evaluatorProgress.map((evaluator) => (
-                  <div key={evaluator.id} className="w-full flex-shrink-0 flex flex-col items-center justify-center px-4 py-8">
-                    <div className="relative mb-8">
-                      {evaluator.status === 'complete' ? (
-                        <div className="w-80 h-80 bg-gradient-to-br from-green-600/20 to-emerald-600/20 rounded-full flex items-center justify-center">
-                          <div className="w-32 h-32 bg-green-500 rounded-full flex items-center justify-center animate-scaleIn">
-                            <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    ) : (
+                      <div className="relative">
+                        <ShaderCanvas
+                          size={224}
+                          shaderId={evaluator.shaderId}
+                          isActive={evaluator.status === 'loading'}
+                          timeOffset={evaluator.timeOffset}
+                        />
+                        {evaluator.status === 'pending' && (
+                          <div className="absolute inset-0 bg-gray-900/60 rounded-full flex items-center justify-center backdrop-blur-sm">
+                            <svg className="w-16 h-16 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           </div>
-                        </div>
-                      ) : (
-                        <>
-                          <ShaderCanvas size={320} shaderId={evaluator.shaderId} isActive={evaluator.status === 'loading'} />
-                          {evaluator.status === 'loading' && (
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                              <div className="w-72 h-72 border-4 border-white/10 border-t-white/40 rounded-full animate-spin"></div>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">
-                      {evaluator.status === 'complete'
-                        ? `평가위원 ${evaluator.id} 완료`
-                        : evaluator.status === 'loading'
-                        ? `평가위원 ${evaluator.id} 평가 중`
-                        : `평가위원 ${evaluator.id} 대기 중`}
-                    </h3>
-                    <p className="text-gray-400">{evaluator.name}</p>
-                    {evaluator.status === 'complete' && evaluator.score !== undefined && (
-                      <div className={`mt-4 px-6 py-3 rounded-xl font-bold text-xl ${
-                        evaluator.score >= 60
-                          ? 'bg-green-900/50 text-green-300'
-                          : 'bg-red-900/50 text-red-300'
-                      }`}>
-                        {evaluator.score}점
+                        )}
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
-            </div>
 
-            {/* 슬라이드 인디케이터 */}
-            <div className="flex gap-2 mt-8">
-              {[0, 1, 2, 3].map((idx) => (
-                <div
-                  key={idx}
-                  className={`h-3 rounded-full transition-all duration-300 ${
-                    currentSlide === idx ? 'bg-purple-500 w-8' : 'bg-gray-600 w-3'
-                  }`}
-                />
+                  {/* 평가위원 정보 */}
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    {evaluator.name}
+                  </h3>
+                  <p className="text-sm text-gray-400 mb-6 font-medium">{evaluator.persona}</p>
+
+                  {/* 상태 표시 */}
+                  <div className={`
+                    px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-500
+                    ${evaluator.status === 'complete'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      : evaluator.status === 'loading'
+                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                      : 'bg-gray-800/50 text-gray-500 border border-gray-700/50'
+                    }
+                  `}>
+                    {evaluator.status === 'complete' ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        평가 완료
+                      </span>
+                    ) : evaluator.status === 'loading' ? (
+                      <span className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                        심사 진행 중
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-gray-500 rounded-full" />
+                        대기 중
+                      </span>
+                    )}
+                  </div>
+
+                </div>
               ))}
             </div>
+            )}
 
-            {/* 진행 바 */}
-            <div className="w-64 h-1.5 bg-gray-800 rounded-full mt-4 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
-                style={{ width: `${((currentSlide + 1) / 4) * 100}%` }}
-              />
+            {/* 전체 진행 상황 */}
+            {loadingStage === 'evaluating' && (
+            <div className="mt-16 w-full max-w-lg relative">
+              <div className="flex justify-between text-sm mb-3">
+                <span className="text-gray-400 font-medium">전체 진행률</span>
+                <span className="text-purple-300 font-semibold">{completedCount}/3 완료</span>
+              </div>
+              <div className="h-3 bg-gray-800/80 rounded-full overflow-hidden backdrop-blur-sm border border-gray-700/50">
+                <div
+                  className="h-full bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-500 transition-all duration-700 ease-out relative"
+                  style={{ width: `${(completedCount / 3) * 100}%` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                </div>
+              </div>
             </div>
-
-            {/* 단계 라벨 */}
-            <div className="mt-4 text-sm text-gray-500">
-              {currentSlide === 0 && '1/4 구조 분석'}
-              {currentSlide === 1 && '2/4 평가위원 A'}
-              {currentSlide === 2 && '3/4 평가위원 B'}
-              {currentSlide === 3 && '4/4 평가위원 C'}
-            </div>
+            )}
 
             {/* 종합 분석 표시 */}
-            {loadingStage === 'analyzing' && (
-              <div className="mt-8 bg-purple-900/20 rounded-2xl border border-purple-600 p-6 animate-fadeIn max-w-md">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white animate-pulse">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
+            {loadingStage === 'comprehensive' && (
+              <div className="mt-12 bg-gradient-to-br from-purple-950/60 to-indigo-950/60 rounded-3xl border border-purple-500/30 p-8 animate-fadeIn max-w-lg w-full backdrop-blur-sm shadow-2xl shadow-purple-500/10">
+                <div className="flex items-center gap-5">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-purple-500/30 rounded-2xl blur-xl animate-pulse" />
+                    <div className="relative w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
                   </div>
                   <div className="flex-1">
-                    <div className="font-bold text-white">종합 분석 진행 중</div>
-                    <div className="text-sm text-gray-400">결과를 종합하고 있습니다...</div>
+                    <div className="font-bold text-white text-lg mb-1">종합 분석 진행 중</div>
+                    <div className="text-sm text-gray-400">3명의 평가 결과를 종합하고 있습니다...</div>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1.5">
                     {[0, 1, 2].map((dot) => (
                       <div
                         key={dot}
-                        className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"
-                        style={{ animationDelay: `${dot * 0.2}s` }}
+                        className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce"
+                        style={{ animationDelay: `${dot * 0.15}s` }}
                       />
                     ))}
                   </div>
@@ -697,6 +637,24 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* Progress Animation CSS */}
+      <style jsx>{`
+        @keyframes progress {
+          0% {
+            width: 0%;
+          }
+          50% {
+            width: 70%;
+          }
+          100% {
+            width: 100%;
+          }
+        }
+        .animate-progress {
+          animation: progress 2s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   )
 }

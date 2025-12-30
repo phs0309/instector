@@ -4,11 +4,12 @@ import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { EvaluationResult, DetailedScore } from '@/types'
 import { evaluators } from '@/lib/evaluators'
+import RadarChart from './RadarChart'
 
 // Dynamic import for ShaderCanvas to avoid SSR issues with WebGL
 const ShaderCanvas = dynamic(() => import('@/components/ShaderCanvas'), {
   ssr: false,
-  loading: () => <div className="w-14 h-14 bg-gray-800 rounded-xl animate-pulse" />,
+  loading: () => <div className="w-28 h-28 bg-gray-800 rounded-full animate-pulse" />,
 })
 
 interface EvaluatorCardProps {
@@ -17,9 +18,16 @@ interface EvaluatorCardProps {
 
 // 평가위원별 Shader ID 매핑
 const evaluatorShaderMap: Record<string, number> = {
-  'A': 1, // 보라색 (학자형)
+  'A': 1, // 초록색 (학자형)
   'B': 2, // 남색 (실무형)
   'C': 3, // 핑크색 (교육자형)
+}
+
+// 평가위원별 색상
+const evaluatorColorMap: Record<string, string> = {
+  'A': '#22c55e', // 초록색
+  'B': '#6366f1', // 남색
+  'C': '#ec4899', // 핑크색
 }
 
 export default function EvaluatorCard({ evaluation }: EvaluatorCardProps) {
@@ -119,20 +127,11 @@ export default function EvaluatorCard({ evaluation }: EvaluatorCardProps) {
       <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-5 border-b border-gray-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="relative">
-              <ShaderCanvas
-                size={56}
-                shaderId={evaluatorShaderMap[evaluation.evaluatorId] || 1}
-                isActive={true}
-                className="rounded-xl"
-              />
-              {/* 평가위원 ID 오버레이 */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-white text-lg font-bold drop-shadow-lg">
-                  {evaluation.evaluatorId}
-                </span>
-              </div>
-            </div>
+            <ShaderCanvas
+              size={112}
+              shaderId={evaluatorShaderMap[evaluation.evaluatorId] || 1}
+              isActive={true}
+            />
             <div>
               <h3 className="font-bold text-white text-lg">{evaluator.name}</h3>
               <p className="text-sm text-gray-400">{evaluator.persona}</p>
@@ -174,20 +173,19 @@ export default function EvaluatorCard({ evaluation }: EvaluatorCardProps) {
             </button>
           </div>
 
-          {/* Score Summary (always visible) */}
-          <div className="grid grid-cols-5 gap-2 mb-4">
-            {categories.map(({ key, label, icon }) => {
-              const detail = evaluation.detailedFeedback[key as keyof typeof evaluation.detailedFeedback]
-              if (!detail) return null
-              return (
-                <div key={key} className="text-center p-2 bg-gray-800 rounded-lg">
-                  <span className="text-lg">{icon}</span>
-                  <div className={`text-sm font-bold ${detail.score >= 12 ? 'text-green-400' : detail.score >= 8 ? 'text-blue-400' : 'text-red-400'}`}>
-                    {detail.score}/20
-                  </div>
-                </div>
-              )
-            })}
+          {/* Radar Chart */}
+          <div className="flex justify-center mb-4">
+            <RadarChart
+              scores={{
+                theory: evaluation.detailedFeedback.theory?.score || 0,
+                practical: evaluation.detailedFeedback.practical?.score || 0,
+                structure: evaluation.detailedFeedback.structure?.score || 0,
+                expression: evaluation.detailedFeedback.expression?.score || 0,
+                completeness: evaluation.detailedFeedback.completeness?.score || 0,
+              }}
+              size={240}
+              color={evaluatorColorMap[evaluation.evaluatorId] || '#8b5cf6'}
+            />
           </div>
 
           {/* Detailed sections (toggle) */}

@@ -7,7 +7,12 @@ async function analyzeStructure(
   extractedText: string,
   apiKey: string
 ): Promise<StructureAnalysis> {
+  const stepStart = Date.now()
   const prompt = getStructureAnalysisPrompt(extractedText)
+
+  console.log('=== 구조 분석 시작 ===')
+  console.log(`입력 텍스트 길이: ${extractedText.length}자`)
+  console.log(`프롬프트 길이: ${prompt.length}자`)
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -34,8 +39,14 @@ async function analyzeStructure(
     throw new Error('구조 분석 중 오류가 발생했습니다.')
   }
 
+  const apiTime = Date.now() - stepStart
+  console.log(`API 응답 시간: ${apiTime}ms`)
+
   const data = await response.json()
   const content = data.content[0]?.text
+
+  console.log(`응답 토큰: 입력=${data.usage?.input_tokens}, 출력=${data.usage?.output_tokens}`)
+  console.log(`응답 길이: ${content?.length || 0}자`)
 
   if (!content) {
     throw new Error('구조 분석 결과를 가져올 수 없습니다.')
@@ -47,6 +58,9 @@ async function analyzeStructure(
     throw new Error('구조 분석 응답 형식이 올바르지 않습니다.')
   }
 
+  const totalTime = Date.now() - stepStart
+  console.log(`=== 구조 분석 완료: ${totalTime}ms ===\n`)
+
   return JSON.parse(jsonMatch[0])
 }
 
@@ -57,8 +71,12 @@ async function evaluateWithAI(
   structureAnalysis: StructureAnalysis,
   apiKey: string
 ): Promise<EvaluationResult> {
+  const stepStart = Date.now()
   const evaluator = evaluators[evaluatorId]
   const prompt = getEvaluatorPrompt(evaluator, extractedText, structureAnalysis)
+
+  console.log(`=== 평가위원 ${evaluatorId} 시작 ===`)
+  console.log(`프롬프트 길이: ${prompt.length}자`)
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -79,6 +97,9 @@ async function evaluateWithAI(
     }),
   })
 
+  const apiTime = Date.now() - stepStart
+  console.log(`평가위원 ${evaluatorId} API 응답 시간: ${apiTime}ms`)
+
   if (!response.ok) {
     const error = await response.text()
     console.error(`Evaluator ${evaluatorId} Error:`, error)
@@ -87,6 +108,9 @@ async function evaluateWithAI(
 
   const data = await response.json()
   const content = data.content[0]?.text
+
+  console.log(`평가위원 ${evaluatorId} 토큰: 입력=${data.usage?.input_tokens}, 출력=${data.usage?.output_tokens}`)
+  console.log(`평가위원 ${evaluatorId} 응답 길이: ${content?.length || 0}자`)
 
   if (!content) {
     throw new Error(`평가위원 ${evaluatorId}의 평가 결과를 가져올 수 없습니다.`)
@@ -97,6 +121,9 @@ async function evaluateWithAI(
   if (!jsonMatch) {
     throw new Error(`평가위원 ${evaluatorId}의 응답 형식이 올바르지 않습니다.`)
   }
+
+  const totalTime = Date.now() - stepStart
+  console.log(`=== 평가위원 ${evaluatorId} 완료: ${totalTime}ms ===\n`)
 
   const result = JSON.parse(jsonMatch[0])
 
@@ -121,6 +148,8 @@ async function getComprehensiveAnalysis(
   evaluations: EvaluationResult[],
   apiKey: string
 ): Promise<Omit<ComprehensiveResult, 'evaluations'>> {
+  const stepStart = Date.now()
+
   const evaluationsText = evaluations
     .map((e) => {
       return `[평가위원 ${e.evaluatorId}]
@@ -132,6 +161,9 @@ async function getComprehensiveAnalysis(
     .join('\n\n')
 
   const prompt = getComprehensiveAnalysisPrompt(evaluationsText)
+
+  console.log('=== 종합 분석 시작 ===')
+  console.log(`프롬프트 길이: ${prompt.length}자`)
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -152,6 +184,9 @@ async function getComprehensiveAnalysis(
     }),
   })
 
+  const apiTime = Date.now() - stepStart
+  console.log(`종합 분석 API 응답 시간: ${apiTime}ms`)
+
   if (!response.ok) {
     const error = await response.text()
     console.error('Comprehensive Analysis Error:', error)
@@ -160,6 +195,9 @@ async function getComprehensiveAnalysis(
 
   const data = await response.json()
   const content = data.content[0]?.text
+
+  console.log(`종합 분석 토큰: 입력=${data.usage?.input_tokens}, 출력=${data.usage?.output_tokens}`)
+  console.log(`종합 분석 응답 길이: ${content?.length || 0}자`)
 
   if (!content) {
     throw new Error('종합 분석 결과를 가져올 수 없습니다.')
@@ -170,6 +208,9 @@ async function getComprehensiveAnalysis(
   if (!jsonMatch) {
     throw new Error('종합 분석 응답 형식이 올바르지 않습니다.')
   }
+
+  const totalTime = Date.now() - stepStart
+  console.log(`=== 종합 분석 완료: ${totalTime}ms ===\n`)
 
   return JSON.parse(jsonMatch[0])
 }
@@ -208,13 +249,23 @@ export async function POST(
 
     const startTime = Date.now()
 
+    console.log('\n' + '='.repeat(60))
+    console.log('📊 평가 프로세스 시작')
+    console.log('='.repeat(60))
+    console.log(`시작 시간: ${new Date().toISOString()}`)
+    console.log(`API 키 개수: ${apiKeys.length}개`)
+
     // Step 1: 구조 분석 (평가 전 사전 분석)
-    console.log('Step 1: 구조 분석 시작...')
+    console.log('\n📌 Step 1: 구조 분석')
+    const step1Start = Date.now()
     const structureAnalysis = await analyzeStructure(extractedText, apiKeys[0])
-    console.log(`구조 분석 완료 (${Date.now() - startTime}ms):`, structureAnalysis.detectedField, structureAnalysis.overallStructureScore)
+    const step1Time = Date.now() - step1Start
+    console.log(`✅ 구조 분석 결과: ${structureAnalysis.detectedField}, 점수: ${structureAnalysis.overallStructureScore}`)
+    console.log(`⏱️  Step 1 총 소요시간: ${step1Time}ms`)
 
     // Step 2: 3명의 평가위원 병렬 평가 (각각 다른 API 키 사용)
-    console.log('Step 2: 평가위원 병렬 평가 시작...')
+    console.log('\n📌 Step 2: 평가위원 병렬 평가')
+    const step2Start = Date.now()
     const evaluatorConfigs: { id: EvaluatorType; apiKey: string }[] = [
       { id: 'A', apiKey: apiKeys[0] },
       { id: 'B', apiKey: apiKeys[1] },
@@ -226,15 +277,30 @@ export async function POST(
     )
 
     const evaluations = await Promise.all(evaluationPromises)
-    console.log(`평가위원 평가 완료 (${Date.now() - startTime}ms)`)
+    const step2Time = Date.now() - step2Start
+    console.log(`✅ 평가위원 점수: A=${evaluations[0].score}, B=${evaluations[1].score}, C=${evaluations[2].score}`)
+    console.log(`⏱️  Step 2 총 소요시간: ${step2Time}ms (병렬 처리)`)
 
     // 종합 분석
-    console.log('Step 3: 종합 분석 시작...')
+    console.log('\n📌 Step 3: 종합 분석')
+    const step3Start = Date.now()
     const comprehensiveAnalysis = await getComprehensiveAnalysis(
       evaluations,
       apiKeys[0]
     )
-    console.log(`전체 완료 (${Date.now() - startTime}ms)`)
+    const step3Time = Date.now() - step3Start
+    console.log(`⏱️  Step 3 총 소요시간: ${step3Time}ms`)
+
+    const totalTime = Date.now() - startTime
+    console.log('\n' + '='.repeat(60))
+    console.log('📊 평가 프로세스 완료')
+    console.log('='.repeat(60))
+    console.log(`Step 1 (구조 분석):    ${step1Time}ms`)
+    console.log(`Step 2 (평가위원):     ${step2Time}ms`)
+    console.log(`Step 3 (종합 분석):    ${step3Time}ms`)
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)
+    console.log(`🏁 총 소요시간:         ${totalTime}ms (${(totalTime/1000).toFixed(1)}초)`)
+    console.log('='.repeat(60) + '\n')
 
     const result: ComprehensiveResult = {
       ...comprehensiveAnalysis,

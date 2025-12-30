@@ -1,9 +1,43 @@
-// 기술사 분야 타입
+// 기술사 분야 타입 - 한국 국가기술자격 기술사 종목
 export type EngineerField =
+  // 정보통신 분야
   | '정보관리기술사'
   | '컴퓨터시스템응용기술사'
   | '정보통신기술사'
+  // 전기·전자 분야
   | '전자응용기술사'
+  | '전기응용기술사'
+  | '전기철도기술사'
+  // 기계·건설 분야
+  | '기계기술사'
+  | '건축기계설비기술사'
+  | '건설기계기술사'
+  | '토목구조기술사'
+  | '토질및기초기술사'
+  | '건축구조기술사'
+  // 화학·환경 분야
+  | '화공기술사'
+  | '대기관리기술사'
+  | '수질관리기술사'
+  | '소음진동기술사'
+  // 안전·품질 분야
+  | '산업안전기술사'
+  | '건설안전기술사'
+  | '소방기술사'
+  | '품질관리기술사'
+  // 기타 분야
+  | '측량및지형공간정보기술사'
+  | '발송배전기술사'
+  | '식품기술사'
+  | '기타'
+
+// 기술사 분야 카테고리
+export type FieldCategory =
+  | '정보통신'
+  | '전기·전자'
+  | '기계·건설'
+  | '화학·환경'
+  | '안전·품질'
   | '기타'
 
 // 평가위원 타입
@@ -69,29 +103,28 @@ export interface ComprehensiveResult {
 
 // 구조 분석 결과 (평가 전 사전 분석)
 export interface StructureAnalysis {
+  // 기술사 종목 판별 정보
+  detectedField: EngineerField // 감지된 기술사 종목
+  fieldCategory: FieldCategory // 분야 카테고리
+  confidence: number // 판별 신뢰도 (0-100)
+  detectionReason: string // 판별 근거
+
+  // 키워드 분석
+  keywords: {
+    found: string[] // 발견된 핵심 키워드
+    fieldSpecific: string[] // 해당 기술사 분야 특화 키워드
+    missing: string[] // 누락 추정 키워드
+  }
+
+  // 답안 구조 분석
   structure: {
     hasOutline: boolean // 개요도 포함 여부
     hasIntro: boolean // 서론 포함 여부
     hasBody: boolean // 본론 포함 여부
     hasConclusion: boolean // 결론 포함 여부
-    structureComment: string // 구조에 대한 한 줄 평가
+    structureComment: string // 구조에 대한 평가
   }
-  diagrams: {
-    hasDiagram: boolean // 도식 포함 여부
-    diagramTypes: string[] // 도식 종류 (표, 그림, 개요도 등)
-    diagramComment: string // 도식 활용에 대한 한 줄 평가
-  }
-  keywords: {
-    found: string[] // 발견된 핵심 키워드
-    missing: string[] // 누락 추정 키워드
-    keywordComment: string // 키워드에 대한 한 줄 평가
-  }
-  format: {
-    estimatedPages: number // 예상 분량 (페이지)
-    readability: '상' | '중' | '하' // 가독성
-    formatComment: string // 분량 및 가독성에 대한 한 줄 평가
-  }
-  detectedField: EngineerField // 감지된 기술사 분야
+
   overallStructureScore: number // 구조 점수 (0-100, 참고용)
   structureSummary: string // 전체 구조 분석 요약
 }

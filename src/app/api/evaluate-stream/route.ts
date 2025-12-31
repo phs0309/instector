@@ -23,45 +23,67 @@ function sendSSE(controller: ReadableStreamDefaultController, event: SSEEvent) {
   controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`))
 }
 
-// Gemini API 호출 함수 (Gemini 2.5 Flash 사용)
+// Gemini API 호출 함수 (Gemini 2.5 Flash 사용, 재시도 로직 포함)
 async function callGemini(prompt: string, apiKey: string, maxTokens: number = 8192): Promise<string> {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
+  // 재시도 로직 (최대 3번)
+  let lastError: Error | null = null
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        ],
-        generationConfig: {
-          maxOutputTokens: maxTokens,
-          temperature: 0.7,
-        },
-      }),
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [{ text: prompt }],
+              },
+            ],
+            generationConfig: {
+              maxOutputTokens: maxTokens,
+              temperature: 0.7,
+            },
+          }),
+        }
+      )
+
+      if (!response.ok) {
+        const error = await response.text()
+        console.error(`Gemini API Error (attempt ${attempt}/3):`, error)
+        console.error('Gemini API Status:', response.status)
+
+        if (attempt < 3) {
+          // 재시도 전 대기 (1초, 2초, ...)
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000))
+          continue
+        }
+        throw new Error(`Gemini API 호출 중 오류가 발생했습니다: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text
+
+      if (!content) {
+        console.error('Gemini API 응답 구조:', JSON.stringify(data, null, 2))
+        throw new Error('Gemini API 응답을 가져올 수 없습니다.')
+      }
+
+      return content
+    } catch (error) {
+      lastError = error as Error
+      if (attempt < 3) {
+        console.log(`재시도 중... (${attempt}/3)`)
+        await new Promise(resolve => setTimeout(resolve, attempt * 1000))
+        continue
+      }
     }
-  )
-
-  if (!response.ok) {
-    const error = await response.text()
-    console.error('Gemini API Error Response:', error)
-    console.error('Gemini API Status:', response.status)
-    throw new Error(`Gemini API 호출 중 오류가 발생했습니다: ${response.status}`)
   }
 
-  const data = await response.json()
-  const content = data.candidates?.[0]?.content?.parts?.[0]?.text
-
-  if (!content) {
-    console.error('Gemini API 응답 구조:', JSON.stringify(data, null, 2))
-    throw new Error('Gemini API 응답을 가져올 수 없습니다.')
-  }
-
-  return content
+  throw lastError || new Error('Gemini API 호출 실패')
 }
 
 // 평가위원 평가 (선택된 기술사 종목 사용)

@@ -6,7 +6,6 @@ import { useState } from 'react'
 interface OCRPreviewProps {
   images: UploadedImage[]
   text: string
-  confidence: number
   onTextChange: (text: string) => void
   onConfirm: () => void
   onRetry: () => void
@@ -16,25 +15,12 @@ interface OCRPreviewProps {
 export default function OCRPreview({
   images,
   text,
-  confidence,
   onTextChange,
   onConfirm,
   onRetry,
   isLoading,
 }: OCRPreviewProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-
-  const getConfidenceColor = () => {
-    if (confidence >= 0.8) return 'bg-green-500'
-    if (confidence >= 0.6) return 'bg-yellow-500'
-    return 'bg-red-500'
-  }
-
-  const getConfidenceText = () => {
-    if (confidence >= 0.8) return '높음'
-    if (confidence >= 0.6) return '보통'
-    return '낮음'
-  }
 
   return (
     <div className="bg-gray-900 rounded-2xl border border-gray-800 shadow-lg overflow-hidden">
@@ -50,20 +36,6 @@ export default function OCRPreview({
             <div>
               <h3 className="font-bold text-white">텍스트 변환 결과</h3>
               <p className="text-sm text-gray-400">원본과 비교하며 텍스트를 확인하세요</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">인식 신뢰도:</span>
-            <div className="flex items-center gap-2">
-              <div className="w-20 h-2 bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  className={`h-full ${getConfidenceColor()} transition-all duration-500`}
-                  style={{ width: `${confidence * 100}%` }}
-                />
-              </div>
-              <span className={`text-sm font-medium ${confidence >= 0.8 ? 'text-green-400' : confidence >= 0.6 ? 'text-yellow-400' : 'text-red-400'}`}>
-                {getConfidenceText()} ({(confidence * 100).toFixed(0)}%)
-              </span>
             </div>
           </div>
         </div>

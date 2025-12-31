@@ -165,6 +165,7 @@ export default function EvaluatePage() {
           if (line.startsWith('data: ')) {
             try {
               const event = JSON.parse(line.slice(6))
+              console.log('SSE Event:', event.type, event)
 
               switch (event.type) {
                 case 'evaluator-start':
@@ -194,6 +195,7 @@ export default function EvaluatePage() {
                   break
 
                 case 'complete':
+                  console.log('Complete event received:', event.data)
                   finalResult = event.data
                   break
 
@@ -202,7 +204,10 @@ export default function EvaluatePage() {
               }
             } catch (parseError) {
               // JSON 파싱 실패 시 무시 (불완전한 청크일 수 있음)
-              if (parseError instanceof SyntaxError) continue
+              if (parseError instanceof SyntaxError) {
+                console.log('JSON parse error (ignored):', line)
+                continue
+              }
               throw parseError
             }
           }
@@ -451,7 +456,6 @@ export default function EvaluatePage() {
             <OCRPreview
               images={images}
               text={ocrText}
-              confidence={ocrConfidence}
               onTextChange={setOcrText}
               onConfirm={handleEvaluate}
               onRetry={handleOCR}

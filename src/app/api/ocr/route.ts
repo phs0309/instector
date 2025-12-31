@@ -12,11 +12,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<APIRespon
       }, { status: 400 })
     }
 
-    const apiKey = process.env.GOOGLE_VISION_API_KEY
+    const apiKey = process.env.GOOGLE_API_KEY
     if (!apiKey) {
       return NextResponse.json({
         success: false,
-        error: 'Google Vision API 키가 설정되지 않았습니다.',
+        error: 'Google API 키가 설정되지 않았습니다.',
       }, { status: 500 })
     }
 

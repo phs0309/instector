@@ -29,12 +29,12 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         float rz = map(p3d);
         float f = clamp((rz - map(p3d+.1))*0.5, -.1, 1.);
 
-        // 초록색 (Green) 색상
+        // 보라색 (Purple) 색상
         vec3 baseColor;
         if(isActive) {
-            baseColor = vec3(0.1, 0.3, 0.15) + vec3(1.5, 5.0, 2.0)*f;
+            baseColor = vec3(0.3, 0.1, 0.4) + vec3(3.0, 1.5, 5.0)*f;
         } else {
-            baseColor = vec3(0.05, 0.2, 0.1) + vec3(1.0, 4.0, 1.5)*f;
+            baseColor = vec3(0.2, 0.05, 0.3) + vec3(2.5, 1.0, 4.0)*f;
         }
 
         cl = cl*baseColor + smoothstep(2.5, .0, rz)*.7*baseColor;
@@ -97,12 +97,12 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         float rz = map(p3d);
         float f = clamp((rz - map(p3d+.1))*0.5, -.1, 1.);
 
-        // 파랑색 (Blue/Indigo) 색상
+        // 보라색 (Purple) 색상
         vec3 baseColor;
         if(isActive) {
-            baseColor = vec3(0.1, 0.15, 0.4) + vec3(2.0, 3.0, 5.0)*f;
+            baseColor = vec3(0.3, 0.1, 0.4) + vec3(3.0, 1.5, 5.0)*f;
         } else {
-            baseColor = vec3(0.05, 0.1, 0.3) + vec3(1.5, 2.5, 4.0)*f;
+            baseColor = vec3(0.2, 0.05, 0.3) + vec3(2.5, 1.0, 4.0)*f;
         }
 
         cl = cl*baseColor + smoothstep(2.5, .0, rz)*.7*baseColor;
@@ -165,12 +165,12 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         float rz = map(p3d);
         float f = clamp((rz - map(p3d+.1))*0.5, -.1, 1.);
 
-        // 핑크색 (Pink) 색상
+        // 보라색 (Purple) 색상
         vec3 baseColor;
         if(isActive) {
-            baseColor = vec3(0.4, 0.1, 0.25) + vec3(5.0, 1.5, 3.5)*f;
+            baseColor = vec3(0.3, 0.1, 0.4) + vec3(3.0, 1.5, 5.0)*f;
         } else {
-            baseColor = vec3(0.3, 0.05, 0.2) + vec3(4.0, 1.0, 3.0)*f;
+            baseColor = vec3(0.2, 0.05, 0.3) + vec3(2.5, 1.0, 4.0)*f;
         }
 
         cl = cl*baseColor + smoothstep(2.5, .0, rz)*.7*baseColor;

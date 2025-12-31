@@ -93,30 +93,21 @@ export default function EvaluatePage() {
     setLoadingStage('ocr')
 
     try {
-      const ocrResults: { text: string; confidence: number }[] = []
+      const image = images[0] // 첫 번째 이미지만 처리
 
-      for (const image of images) {
-        const ocrResponse = await fetch('/api/ocr', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: image.preview }),
-        })
+      const ocrResponse = await fetch('/api/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: image.preview }),
+      })
 
-        const ocrData = await ocrResponse.json()
-        if (!ocrData.success) {
-          throw new Error(ocrData.error || 'OCR 처리 실패')
-        }
-        ocrResults.push({
-          text: ocrData.data.text,
-          confidence: ocrData.data.confidence,
-        })
+      const ocrData = await ocrResponse.json()
+      if (!ocrData.success) {
+        throw new Error(ocrData.error || 'OCR 처리 실패')
       }
 
-      const combinedText = ocrResults.map(r => r.text).join('\n\n--- 페이지 구분 ---\n\n')
-      const avgConfidence = ocrResults.reduce((acc, r) => acc + r.confidence, 0) / ocrResults.length
-
-      setOcrText(combinedText)
-      setOcrConfidence(avgConfidence)
+      setOcrText(ocrData.data.text)
+      setOcrConfidence(ocrData.data.confidence)
       setStep('ocr-review')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'OCR 처리 중 오류가 발생했습니다.')

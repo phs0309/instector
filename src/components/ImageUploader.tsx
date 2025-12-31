@@ -22,29 +22,25 @@ export default function ImageUploader({ onImagesChange, images }: ImageUploaderP
   }, [])
 
   const processFiles = useCallback((files: FileList | null) => {
-    if (!files) return
+    if (!files || files.length === 0) return
 
-    const newImages: UploadedImage[] = []
+    // 첫 번째 파일만 처리
+    const file = files[0]
 
-    Array.from(files).forEach((file) => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          const newImage: UploadedImage = {
-            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            file,
-            preview: e.target?.result as string,
-          }
-          newImages.push(newImage)
-
-          if (newImages.length === files.length) {
-            onImagesChange([...images, ...newImages.filter(img => img.preview)])
-          }
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const newImage: UploadedImage = {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          file,
+          preview: e.target?.result as string,
         }
-        reader.readAsDataURL(file)
+        // 기존 이미지를 대체
+        onImagesChange([newImage])
       }
-    })
-  }, [images, onImagesChange])
+      reader.readAsDataURL(file)
+    }
+  }, [onImagesChange])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -74,13 +70,14 @@ export default function ImageUploader({ onImagesChange, images }: ImageUploaderP
           file,
           preview: e.target?.result as string,
         }
-        onImagesChange([...images, exampleImage])
+        // 기존 이미지를 대체
+        onImagesChange([exampleImage])
       }
       reader.readAsDataURL(file)
     } catch (error) {
       console.error('예시 이미지 로드 실패:', error)
     }
-  }, [images, onImagesChange])
+  }, [onImagesChange])
 
   return (
     <div className="space-y-4">
@@ -101,7 +98,6 @@ export default function ImageUploader({ onImagesChange, images }: ImageUploaderP
         <input
           type="file"
           accept="image/*"
-          multiple
           onChange={handleFileSelect}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
@@ -119,7 +115,7 @@ export default function ImageUploader({ onImagesChange, images }: ImageUploaderP
               드래그 앤 드롭 또는 클릭하여 업로드
             </p>
             <p className="text-xs text-gray-500 mt-2">
-              여러 장의 이미지를 한 번에 업로드할 수 있습니다
+              답안지 1장을 업로드해주세요
             </p>
           </div>
         </div>
@@ -138,37 +134,27 @@ export default function ImageUploader({ onImagesChange, images }: ImageUploaderP
         <span className="text-xs text-gray-500">(건축시공기술사)</span>
       </button>
 
-      {/* Image Previews */}
+      {/* Image Preview */}
       {images.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-gray-300">
-            업로드된 이미지 ({images.length}장)
+            업로드된 답안지
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {images.map((image, index) => (
-              <div
-                key={image.id}
-                className="relative group rounded-lg overflow-hidden border border-gray-700 bg-gray-800 shadow-sm"
-              >
-                <img
-                  src={image.preview}
-                  alt={`답안지 ${index + 1}`}
-                  className="w-full h-32 object-cover"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200" />
-                <button
-                  onClick={() => removeImage(image.id)}
-                  className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full
-                    opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                    flex items-center justify-center text-sm font-bold hover:bg-red-600"
-                >
-                  ×
-                </button>
-                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs py-1 px-2">
-                  페이지 {index + 1}
-                </div>
-              </div>
-            ))}
+          <div className="relative group rounded-lg overflow-hidden border border-gray-700 bg-gray-800 shadow-sm max-w-md mx-auto">
+            <img
+              src={images[0].preview}
+              alt="답안지"
+              className="w-full h-auto object-contain"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200" />
+            <button
+              onClick={() => removeImage(images[0].id)}
+              className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full
+                opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                flex items-center justify-center text-lg font-bold hover:bg-red-600"
+            >
+              ×
+            </button>
           </div>
         </div>
       )}

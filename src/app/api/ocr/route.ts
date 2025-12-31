@@ -13,7 +13,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<APIRespon
     }
 
     const apiKey = process.env.CLOVA_OCR_SECRET_KEY || 'd05KZnlxbXRHTWVvTmZpZlpHaFB2cUFLTnpOcWxvQkQ='
-    const apiUrl = process.env.CLOVA_OCR_API_URL || 'https://49104-peek-ai.apigw.ntruss.com/custom/v1/49104/peek_ai/general'
+    const apiUrl = process.env.CLOVA_OCR_API_URL || 'https://49104-peekai.apigw.ntruss.com/custom/v1/49104/peekai/general'
 
     if (!apiKey) {
       return NextResponse.json({

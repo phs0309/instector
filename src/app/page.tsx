@@ -353,16 +353,19 @@ export default function LandingPage() {
             {evaluators.map((evaluator, index) => (
               <div
                 key={evaluator.id}
-                className="group flex flex-col items-center text-center p-8 rounded-3xl bg-gradient-to-b from-gray-900 to-gray-950 border border-gray-800/50 hover:border-gray-700/50 transition-all duration-500"
+                className="group flex flex-col items-center text-center p-8 rounded-3xl bg-gradient-to-b from-gray-900 to-gray-950 border border-gray-800/50 hover:border-purple-500/30 transition-all duration-500"
               >
-                {/* Shader 이펙트 */}
+                {/* 아이콘 영역 */}
                 <div className="relative mb-6">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${evaluator.color} rounded-full blur-2xl opacity-30 group-hover:opacity-50 transition-opacity`} />
-                  <ShaderCanvas size={200} shaderId={evaluator.shaderId} isActive={true} timeOffset={index * 3.3} />
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-600/20 to-indigo-600/20 flex items-center justify-center border border-purple-500/30 group-hover:border-purple-500/50 transition-all">
+                    <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-purple-400 to-indigo-400">
+                      {evaluator.id}
+                    </span>
+                  </div>
                 </div>
 
                 <h3 className="text-2xl font-bold text-white mb-1">{evaluator.name}</h3>
-                <p className={`text-sm font-semibold mb-4 bg-gradient-to-r ${evaluator.color} bg-clip-text text-transparent`}>
+                <p className="text-sm font-semibold mb-4 bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
                   {evaluator.persona}
                 </p>
                 <p className="text-gray-400 text-sm leading-relaxed">{evaluator.description}</p>

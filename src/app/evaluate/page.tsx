@@ -512,17 +512,11 @@ export default function EvaluatePage() {
                     group relative flex flex-col items-center p-8 rounded-3xl border transition-all duration-700
                     ${evaluator.status === 'complete'
                       ? 'bg-gradient-to-b from-emerald-950/50 to-gray-950 border-emerald-500/50 shadow-2xl shadow-emerald-500/20'
-                      : evaluator.status === 'loading'
-                      ? 'bg-gradient-to-b from-purple-950/50 to-gray-950 border-purple-500/50 shadow-2xl shadow-purple-500/20'
                       : 'bg-gradient-to-b from-gray-900/80 to-gray-950 border-gray-700/50'
                     }
                   `}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  {/* 카드 배경 글로우 */}
-                  {evaluator.status === 'loading' && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-purple-600/10 to-transparent rounded-3xl" />
-                  )}
 
                   {/* Shader Effect / 완료 체크 */}
                   <div className="relative mb-8">
@@ -566,7 +560,7 @@ export default function EvaluatePage() {
                     ${evaluator.status === 'complete'
                       ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                       : evaluator.status === 'loading'
-                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                       : 'bg-gray-800/50 text-gray-500 border border-gray-700/50'
                     }
                   `}>
@@ -579,7 +573,7 @@ export default function EvaluatePage() {
                       </span>
                     ) : evaluator.status === 'loading' ? (
                       <span className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
                         심사 진행 중
                       </span>
                     ) : (

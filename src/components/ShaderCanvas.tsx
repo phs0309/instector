@@ -9,6 +9,7 @@ interface ShaderCanvasProps {
   isActive?: boolean
   className?: string
   timeOffset?: number  // 각 셰이더가 다르게 움직이도록 시간 오프셋
+  isLoading?: boolean  // 로딩 중일 때만 빠른 속도
 }
 
 export default function ShaderCanvas({
@@ -17,6 +18,7 @@ export default function ShaderCanvas({
   isActive = false,
   className = '',
   timeOffset = 0,
+  isLoading = false,
 }: ShaderCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number>(0)
@@ -60,7 +62,10 @@ export default function ShaderCanvas({
     gl.viewport(0, 0, canvas.width, canvas.height)
 
     const render = () => {
-      const currentTime = (Date.now() - startTime) / 1000 + timeOffset
+      const elapsedTime = (Date.now() - startTime) / 1000
+      // 로딩 중이 아닐 때는 속도를 절반으로 감속
+      const timeScale = isLoading ? 1.0 : 0.5
+      const currentTime = elapsedTime * timeScale + timeOffset
       drawScene(gl, programInfo, buffers, currentTime, canvas.width, canvas.height, isActive)
       animationRef.current = requestAnimationFrame(render)
     }
@@ -73,7 +78,7 @@ export default function ShaderCanvas({
         gl.deleteProgram(shaderProgram)
       }
     }
-  }, [size, shaderId, isActive, selectedShader.fragmentShader, timeOffset])
+  }, [size, shaderId, isActive, selectedShader.fragmentShader, timeOffset, isLoading])
 
   function initShaderProgram(
     gl: WebGLRenderingContext,

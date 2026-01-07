@@ -1,25 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx create-next-app:*)",
-      "Bash(npm init -y)",
-      "Bash(npm install:*)",
-      "Bash(npm run build:*)",
-      "Bash(npm run dev:*)",
-      "Bash(if exist .next rmdir /s /q .next)",
-      "Bash(timeout:*)",
-      "Bash(ping:*)",
-      "Bash(netstat:*)",
-      "Bash(findstr:*)",
-      "Bash(git init:*)",
-      "Bash(git remote add:*)",
+      "Bash(git clone:*)",
       "Bash(git add:*)",
-      "Bash(git reset:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: Instpector - AI 기술사 답안 평가 서비스\n\n- OCR 기반 손글씨 답안 인식\n- 3명의 AI 평가위원\\(A, B, C\\) 병렬 평가\n- 구조 분석 및 실시간 평가 진행 표시\n- WebGL 셰이더 이펙트 UI\n- Claude Opus API 연동\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git branch:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 단일 이미지 업로드 및 Clova OCR 통합\n\n- 이미지 업로드를 여러 장에서 단일 이미지로 제한\n- OCR을 Claude Vision에서 Clova OCR로 변경\n- Vercel 환경변수 지원 \\(fallback으로 하드코딩된 값 사용\\)\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push)",
+      "Bash(git remote set-url:*)",
       "Bash(git push:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 기술사 분야 판별 정확도 향상\n\n- 구조 분석 프롬프트에 4개 기술사 분야별 상세 키워드 추가\n  - 정보관리기술사 \\(ITA\\): EA, ISP, IT거버넌스, 데이터 거버넌스 등\n  - 컴퓨터시스템응용기술사 \\(CSA\\): SDLC, MSA, 알고리즘, AI/ML 등\n  - 정보통신기술사 \\(ICT\\): 네트워크, 보안, 클라우드 등\n  - 전자응용기술사 \\(EE\\): 임베디드, 하드웨어, IoT 등\n- 분야 판단 규칙 명시화\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git commit:*)"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: Clova OCR API URL 수정\n\n- URL 도메인명에서 언더스코어를 하이픈으로 변경\n- peek_ai -> peekai\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nrevert: OCR을 Claude Vision으로 복원\n\n- Clova OCR에서 Claude Vision으로 되돌림\n- 안정적인 OCR 처리를 위해 원래 방식 사용\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)",
+      "Bash(git restore:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }

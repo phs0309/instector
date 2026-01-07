@@ -41,9 +41,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         d += min(rz, 1.);
     }
 
-    // 어두운 보라색 배경 추가
-    vec3 darkPurpleBg = vec3(0.08, 0.05, 0.12); // 어두운 보라색
-    vec3 finalColor = mix(darkPurpleBg, cl, smoothstep(0.0, 0.3, length(cl)));
+    // 어두운 초록색 배경 추가 (Green과 조화)
+    vec3 darkGreenBg = vec3(0.02, 0.08, 0.04); // 어두운 초록색
+    vec3 finalColor = mix(darkGreenBg, cl, smoothstep(0.0, 0.3, length(cl)));
 
     float brightness = max(max(finalColor.r, finalColor.g), finalColor.b);
     float alpha = smoothstep(0.0, 0.15, brightness);
@@ -112,9 +112,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         d += min(rz, 1.);
     }
 
-    // 어두운 보라색 배경 추가
-    vec3 darkPurpleBg = vec3(0.08, 0.05, 0.12); // 어두운 보라색
-    vec3 finalColor = mix(darkPurpleBg, cl, smoothstep(0.0, 0.3, length(cl)));
+    // 어두운 파랑색 배경 추가 (Blue와 조화)
+    vec3 darkBlueBg = vec3(0.02, 0.03, 0.10); // 어두운 파랑색
+    vec3 finalColor = mix(darkBlueBg, cl, smoothstep(0.0, 0.3, length(cl)));
 
     float brightness = max(max(finalColor.r, finalColor.g), finalColor.b);
     float alpha = smoothstep(0.0, 0.15, brightness);
@@ -183,9 +183,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         d += min(rz, 1.);
     }
 
-    // 어두운 보라색 배경 추가
-    vec3 darkPurpleBg = vec3(0.08, 0.05, 0.12); // 어두운 보라색
-    vec3 finalColor = mix(darkPurpleBg, cl, smoothstep(0.0, 0.3, length(cl)));
+    // 어두운 핑크색 배경 추가 (Pink와 조화)
+    vec3 darkPinkBg = vec3(0.10, 0.02, 0.06); // 어두운 핑크색
+    vec3 finalColor = mix(darkPinkBg, cl, smoothstep(0.0, 0.3, length(cl)));
 
     float brightness = max(max(finalColor.r, finalColor.g), finalColor.b);
     float alpha = smoothstep(0.0, 0.15, brightness);

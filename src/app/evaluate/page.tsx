@@ -153,13 +153,18 @@ export default function EvaluatePage() {
 
       const decoder = new TextDecoder()
       let finalResult: ComprehensiveResult | null = null
+      let buffer = '' // 불완전한 라인을 버퍼링
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
 
-        const chunk = decoder.decode(value)
-        const lines = chunk.split('\n')
+        const chunk = decoder.decode(value, { stream: true })
+        buffer += chunk
+
+        const lines = buffer.split('\n')
+        // 마지막 라인은 불완전할 수 있으므로 버퍼에 보관
+        buffer = lines.pop() || ''
 
         for (const line of lines) {
           if (line.startsWith('data: ')) {
@@ -211,6 +216,19 @@ export default function EvaluatePage() {
               throw parseError
             }
           }
+        }
+      }
+
+      // 버퍼에 남은 마지막 라인 처리
+      if (buffer.trim() && buffer.startsWith('data: ')) {
+        try {
+          const event = JSON.parse(buffer.slice(6))
+          console.log('SSE Event (from buffer):', event.type, event)
+          if (event.type === 'complete') {
+            finalResult = event.data
+          }
+        } catch (parseError) {
+          console.log('JSON parse error on final buffer:', buffer)
         }
       }
 

@@ -536,7 +536,7 @@ export default function EvaluatePage() {
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
 
-                  {/* Shader Effect / 완료 체크 */}
+                  {/* 간단한 SVG 아이콘 / 완료 체크 */}
                   <div className="relative mb-8">
                     {evaluator.status === 'complete' ? (
                       <div className="relative w-56 h-56">
@@ -548,20 +548,22 @@ export default function EvaluatePage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="relative">
-                        <ShaderCanvas
-                          size={224}
-                          shaderId={evaluator.shaderId}
-                          isActive={evaluator.status === 'loading'}
-                          timeOffset={evaluator.timeOffset}
-                        />
-                        {evaluator.status === 'pending' && (
-                          <div className="absolute inset-0 bg-gray-900/60 rounded-full flex items-center justify-center backdrop-blur-sm">
-                            <svg className="w-16 h-16 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                        )}
+                      <div className={`
+                        relative w-56 h-56 rounded-full flex items-center justify-center transition-all duration-700
+                        ${evaluator.status === 'loading'
+                          ? 'bg-gradient-to-br from-purple-600/30 to-indigo-600/30 border-2 border-purple-500/50 shadow-lg shadow-purple-500/20'
+                          : 'bg-gradient-to-br from-gray-800/30 to-gray-900/30 border-2 border-gray-700/50'
+                        }
+                      `}>
+                        <span className={`
+                          text-8xl font-black transition-all duration-700
+                          ${evaluator.status === 'loading'
+                            ? 'text-transparent bg-clip-text bg-gradient-to-br from-purple-400 to-indigo-400 animate-pulse'
+                            : 'text-transparent bg-clip-text bg-gradient-to-br from-gray-600 to-gray-700'
+                          }
+                        `}>
+                          {evaluator.id}
+                        </span>
                       </div>
                     )}
                   </div>

@@ -1,22 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import dynamic from 'next/dynamic'
 import { EvaluationResult, DetailedScore } from '@/types'
 import { evaluators } from '@/lib/evaluators'
 import RadarChart from './RadarChart'
-
-// Dynamic import for ShaderCanvas to avoid SSR issues with WebGL
-const ShaderCanvas = dynamic(() => import('@/components/ShaderCanvas'), {
-  ssr: false,
-  loading: () => <div className="w-28 h-28 bg-gray-800 rounded-full animate-pulse" />,
-})
 
 interface EvaluatorCardProps {
   evaluation: EvaluationResult
 }
 
-// 평가위원별 Shader ID 매핑
+// 평가위원별 Shader ID 매핑 (더 이상 사용하지 않지만 호환성을 위해 유지)
 const evaluatorShaderMap: Record<string, number> = {
   'A': 1, // 초록색 (학자형)
   'B': 2, // 남색 (실무형)
@@ -127,11 +120,22 @@ export default function EvaluatorCard({ evaluation }: EvaluatorCardProps) {
       <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-5 border-b border-gray-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <ShaderCanvas
-              size={112}
-              shaderId={evaluatorShaderMap[evaluation.evaluatorId] || 1}
-              isActive={true}
-            />
+            {/* 사람 모양 아이콘 */}
+            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-purple-600/30 to-indigo-600/30 border-2 border-purple-500/50 flex items-center justify-center">
+              <svg
+                className="w-16 h-16 text-purple-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+            </div>
             <div>
               <h3 className="font-bold text-white text-lg">{evaluator.name}</h3>
               <p className="text-sm text-gray-400">{evaluator.persona}</p>

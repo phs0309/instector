@@ -235,6 +235,7 @@ export default function EvaluatePage() {
       if (finalResult) {
         sessionStorage.setItem('evaluationResult', JSON.stringify(finalResult))
         sessionStorage.setItem('extractedText', ocrText)
+        sessionStorage.setItem('field', selectedField)
         router.push('/result')
       } else {
         throw new Error('평가 결과를 받지 못했습니다.')

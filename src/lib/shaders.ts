@@ -1,8 +1,8 @@
 // Shader programs for 3 evaluators visualization
 // All using Ether effect with different colors
 
-// Shader 1: Ether - 초록색 (Green - Evaluator A)
-export const etherGreen = `
+// Shader 1: Ether - 보라색 (Purple - Evaluator A)
+export const etherPurple = `
 precision mediump float;
 uniform vec2 iResolution;
 uniform float iTime;
@@ -29,22 +29,19 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         float rz = map(p3d);
         float f = clamp((rz - map(p3d+.1))*0.5, -.1, 1.);
 
-        // 초록색 (Green) 색상
+        // 보라색 (Purple) 색상
         vec3 baseColor;
         if(isActive) {
-            baseColor = vec3(0.1, 0.3, 0.15) + vec3(1.5, 5.0, 2.0)*f;
+            baseColor = vec3(0.2, 0.1, 0.4) + vec3(3.0, 1.5, 5.0)*f;
         } else {
-            baseColor = vec3(0.05, 0.2, 0.1) + vec3(1.0, 4.0, 1.5)*f;
+            baseColor = vec3(0.15, 0.05, 0.3) + vec3(2.5, 1.0, 4.0)*f;
         }
 
         cl = cl*baseColor + smoothstep(2.5, .0, rz)*.7*baseColor;
         d += min(rz, 1.);
     }
 
-    // 색상 밝기에 따라 알파값 계산 (배경 투명)
-    float brightness = max(max(cl.r, cl.g), cl.b);
-    float alpha = smoothstep(0.0, 0.15, brightness);
-    fragColor = vec4(cl, alpha);
+    fragColor = vec4(cl, 1.0);
 }
 
 void main() {
@@ -109,10 +106,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         d += min(rz, 1.);
     }
 
-    // 색상 밝기에 따라 알파값 계산 (배경 투명)
-    float brightness = max(max(cl.r, cl.g), cl.b);
-    float alpha = smoothstep(0.0, 0.15, brightness);
-    fragColor = vec4(cl, alpha);
+    fragColor = vec4(cl, 1.0);
 }
 
 void main() {
@@ -177,10 +171,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         d += min(rz, 1.);
     }
 
-    // 색상 밝기에 따라 알파값 계산 (배경 투명)
-    float brightness = max(max(cl.r, cl.g), cl.b);
-    float alpha = smoothstep(0.0, 0.15, brightness);
-    fragColor = vec4(cl, alpha);
+    fragColor = vec4(cl, 1.0);
 }
 
 void main() {
@@ -220,20 +211,20 @@ void main() {
 export const shaders = [
   {
     id: 1,
-    name: "Ether Green",
-    fragmentShader: etherGreen,
-    color: "#22c55e" // 초록색 (Green - Evaluator A)
+    name: "Ether Purple",
+    fragmentShader: etherPurple,
+    color: "#8b5cf6" // 보라색 (Purple)
   },
   {
     id: 2,
     name: "Ether Blue",
     fragmentShader: etherBlue,
-    color: "#6366f1" // 파랑/남색 (Blue - Evaluator B)
+    color: "#6366f1" // 파랑/남색 (Blue/Indigo)
   },
   {
     id: 3,
     name: "Ether Pink",
     fragmentShader: etherPink,
-    color: "#ec4899" // 핑크색 (Pink - Evaluator C)
+    color: "#ec4899" // 핑크색 (Pink)
   }
 ];

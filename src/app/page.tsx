@@ -44,7 +44,7 @@ const features = [
       </svg>
     ),
     title: 'AI 손글씨 인식',
-    description: 'Google Vision AI가 손글씨 답안을 정확하게 텍스트로 변환합니다.',
+    description: '사진만 찍으면 끝. Google Vision AI가 손글씨를 98% 정확도로 인식합니다.',
     color: 'indigo',
   },
   {
@@ -54,7 +54,7 @@ const features = [
       </svg>
     ),
     title: '3인 AI 평가위원',
-    description: '학자형, 실무형, 가이드형 3가지 관점의 다각적 평가를 진행합니다.',
+    description: '실제 채점관처럼 이론·실무·구조를 각각 다른 관점에서 평가합니다.',
     color: 'purple',
   },
   {
@@ -73,8 +73,8 @@ const features = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
       </svg>
     ),
-    title: '상세 분석 리포트',
-    description: '이론, 실무, 구조, 표현력, 완성도 5개 영역의 세부 점수를 제공합니다.',
+    title: '5개 영역 점수 분석',
+    description: '이론·실무·구조·표현력·완성도를 100점 만점으로 정량화해 드립니다.',
     color: 'emerald',
   },
   {
@@ -83,8 +83,8 @@ const features = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     ),
-    title: 'AI 모범 답안',
-    description: '평가 결과와 함께 AI가 생성한 모범 답안을 제공합니다.',
+    title: 'AI 모범 답안 제공',
+    description: '같은 문제에 대해 80점 이상 받을 수 있는 모범 답안을 생성해 드립니다.',
     color: 'pink',
   },
   {
@@ -93,8 +93,8 @@ const features = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
       </svg>
     ),
-    title: '맞춤형 학습 가이드',
-    description: '취약점 분석과 함께 합격을 위한 학습 방향을 제시합니다.',
+    title: '합격 맞춤 학습 전략',
+    description: '당신의 취약점을 정확히 분석하고, 단기간 점수를 올릴 학습법을 제안합니다.',
     color: 'amber',
   },
 ]
@@ -221,12 +221,13 @@ export default function LandingPage() {
           {/* 서브 타이틀 */}
           <h2 className="text-2xl md:text-3xl font-medium text-center mb-4 animate-fadeIn" style={{ animationDelay: '0.2s' }}>
             <span className="bg-gradient-to-r from-gray-200 via-white to-gray-200 bg-clip-text text-transparent">
-              AI 기술사 답안 평가 서비스
+              기술사 합격률 15%, 당신의 답안은 합격권인가요?
             </span>
           </h2>
 
-          <p className="text-gray-400 text-lg text-center max-w-lg mb-10 animate-fadeIn" style={{ animationDelay: '0.3s' }}>
-            3명의 AI 평가위원이 당신의 기술사 답안을 다각적으로 분석합니다
+          <p className="text-gray-400 text-lg text-center max-w-2xl mb-10 animate-fadeIn" style={{ animationDelay: '0.3s' }}>
+            3명의 AI 평가위원이 실제 채점 기준으로 답안을 분석하고,<br />
+            <span className="text-blue-400 font-semibold">합격을 위해 반드시 개선해야 할 포인트</span>를 알려드립니다
           </p>
 
           {/* CTA 버튼 */}
@@ -260,10 +261,11 @@ export default function LandingPage() {
       >
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            왜 <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">PEEX AI</span>인가요?
+            혼자서는 알 수 없는 <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">답안의 약점</span>
           </h2>
           <p className="text-gray-400 text-center mb-16 max-w-2xl mx-auto">
-            기술사 시험 준비를 위한 가장 효과적인 AI 기반 평가 시스템
+            스터디 없이도, 학원 없이도 전문가급 피드백을 받을 수 있습니다.<br />
+            <span className="text-white font-semibold">단 3분이면 답안 분석이 완료</span>됩니다.
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -340,10 +342,11 @@ export default function LandingPage() {
       >
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            3명의 <span className="bg-gradient-to-r from-green-400 via-blue-400 to-pink-400 bg-clip-text text-transparent">AI 평가위원</span>
+            실제 채점관처럼 평가하는 <span className="bg-gradient-to-r from-green-400 via-blue-400 to-pink-400 bg-clip-text text-transparent">3인의 AI</span>
           </h2>
           <p className="text-gray-400 text-center mb-16 max-w-2xl mx-auto">
-            각각 다른 관점에서 답안을 분석하여 균형 잡힌 피드백을 제공합니다
+            학술·실무·합격 전략, 세 가지 관점에서 당신의 답안을 동시에 평가합니다.<br />
+            <span className="text-white font-semibold">한 명의 의견이 아닌, 3명의 합의된 평가</span>를 받아보세요.
           </p>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -428,22 +431,23 @@ export default function LandingPage() {
 
         <div className="max-w-3xl mx-auto text-center relative z-10">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            지금 바로{' '}
+            합격까지 몇 점 부족한가요?{' '}
+            <br className="hidden md:block" />
             <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
-              AI 평가
+              지금 바로 확인
             </span>
-            를 시작하세요
+            하세요
           </h2>
           <p className="text-gray-400 text-lg mb-10 max-w-xl mx-auto">
-            기술사 합격을 향한 첫 걸음, PEEX AI와 함께하세요.
-            3명의 AI 평가위원이 당신의 답안을 기다리고 있습니다.
+            답안 사진 1장이면 충분합니다. 3분 안에 정확한 평가 결과를 받아보세요.<br />
+            <span className="text-white font-semibold">완전 무료, 회원가입 불필요</span>
           </p>
 
           <Link href="/evaluate">
             <button className="group relative px-12 py-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-xl font-bold rounded-2xl hover:shadow-2xl hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
               <span className="relative flex items-center gap-3">
-                무료로 시작하기
+                내 답안 평가받기 →
                 <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>

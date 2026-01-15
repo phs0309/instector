@@ -142,7 +142,7 @@ async function callOpenAI(prompt: string, maxTokens: number = 8192): Promise<str
             { role: 'system', content: GPT_SYSTEM_PROMPT },
             { role: 'user', content: prompt }
           ],
-          max_tokens: maxTokens,
+          max_completion_tokens: maxTokens,
           temperature: 0.7,
         }),
       })

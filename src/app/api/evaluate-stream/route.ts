@@ -53,7 +53,7 @@ async function callOpenAI(prompt: string, systemPrompt: string, maxTokens: numbe
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
           ],
-          max_tokens: maxTokens,
+          max_completion_tokens: maxTokens,
           temperature: 0.7,
         }),
       })

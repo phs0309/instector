@@ -17,13 +17,13 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={inter.className}>
-        <div className="min-h-screen bg-black">
+        <div className="min-h-screen bg-zinc-900">
           <main className="max-w-5xl mx-auto px-6 py-8">
             {children}
           </main>
-          <footer className="border-t border-gray-800 bg-black/50 mt-auto">
-            <div className="max-w-5xl mx-auto px-6 py-6 text-center text-sm text-gray-500">
-              Instpector - AI 기반 기술사 답안 평가 서비스
+          <footer className="border-t border-zinc-800 bg-zinc-900/50 mt-auto">
+            <div className="max-w-5xl mx-auto px-6 py-6 text-center text-sm text-zinc-500">
+              PEEX AI - AI 기반 기술사 답안 평가 서비스
             </div>
           </footer>
         </div>

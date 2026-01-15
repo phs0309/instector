@@ -1,26 +1,29 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { EvaluationResult, DetailedScore } from '@/types'
 import { evaluators } from '@/lib/evaluators'
 import RadarChart from './RadarChart'
+
+// Dynamic import for ShaderCanvas to avoid SSR issues with WebGL
+const ShaderCanvas = dynamic(() => import('@/components/ShaderCanvas'), {
+  ssr: false,
+  loading: () => <div className="w-28 h-28 bg-zinc-800 rounded-full animate-pulse" />,
+})
 
 interface EvaluatorCardProps {
   evaluation: EvaluationResult
 }
 
-// 평가위원별 Shader ID 매핑 (더 이상 사용하지 않지만 호환성을 위해 유지)
+// 통합 평가위원 Shader ID (파란색)
 const evaluatorShaderMap: Record<string, number> = {
-  'A': 1, // 초록색 (학자형)
-  'B': 2, // 남색 (실무형)
-  'C': 3, // 핑크색 (교육자형)
+  'A': 2, // 파란색 (통합 평가위원)
 }
 
-// 평가위원별 색상
+// 통합 평가위원 색상
 const evaluatorColorMap: Record<string, string> = {
-  'A': '#22c55e', // 초록색
-  'B': '#6366f1', // 남색
-  'C': '#ec4899', // 핑크색
+  'A': '#6366f1', // 인디고
 }
 
 export default function EvaluatorCard({ evaluation }: EvaluatorCardProps) {
@@ -45,7 +48,7 @@ export default function EvaluatorCard({ evaluation }: EvaluatorCardProps) {
   const getDetailScoreBar = (score: number, max: number = 20) => {
     const percentage = (score / max) * 100
     return (
-      <div className="w-full bg-gray-700 rounded-full h-2.5">
+      <div className="w-full bg-zinc-700 rounded-full h-2.5">
         <div
           className={`h-2.5 rounded-full transition-all duration-500 ${getScoreBarColor(score, max)}`}
           style={{ width: `${percentage}%` }}
@@ -64,13 +67,13 @@ export default function EvaluatorCard({ evaluation }: EvaluatorCardProps) {
 
   const renderDetailedSection = (key: string, detail: DetailedScore, label: string, icon: string, description: string) => {
     return (
-      <div key={key} className="border border-gray-700 rounded-xl overflow-hidden">
-        <div className="p-4 flex items-center justify-between bg-gray-800">
+      <div key={key} className="border border-zinc-600 rounded-xl overflow-hidden">
+        <div className="p-4 flex items-center justify-between bg-zinc-800">
           <div className="flex items-center gap-3">
             <span className="text-xl">{icon}</span>
             <div className="text-left">
               <div className="font-medium text-white">{label}</div>
-              <div className="text-xs text-gray-400">{description}</div>
+              <div className="text-xs text-zinc-400">{description}</div>
             </div>
           </div>
           <div className="text-right">
@@ -81,19 +84,19 @@ export default function EvaluatorCard({ evaluation }: EvaluatorCardProps) {
           </div>
         </div>
 
-        <div className="px-4 pb-4 space-y-4 border-t border-gray-700 bg-gray-800/50">
+        <div className="px-4 pb-4 space-y-4 border-t border-zinc-600 bg-zinc-800/50">
           {/* Score Bar */}
           <div className="pt-3">
             {getDetailScoreBar(detail.score)}
           </div>
 
           {/* Comment */}
-          <p className="text-sm text-gray-300">{detail.comment}</p>
+          <p className="text-sm text-zinc-300">{detail.comment}</p>
 
           {/* Quotes */}
           {detail.quotes && detail.quotes.length > 0 && (
             <div className="space-y-3">
-              <div className="text-xs font-medium text-gray-400 uppercase tracking-wide">답안 인용 및 평가</div>
+              <div className="text-xs font-medium text-zinc-400 uppercase tracking-wide">답안 인용 및 평가</div>
               {detail.quotes.map((q, idx) => (
                 <div
                   key={idx}
@@ -115,30 +118,19 @@ export default function EvaluatorCard({ evaluation }: EvaluatorCardProps) {
   }
 
   return (
-    <div className="bg-gray-900 rounded-2xl border border-gray-800 shadow-sm overflow-hidden">
+    <div className="bg-zinc-800 rounded-2xl border border-zinc-700 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-5 border-b border-gray-800">
+      <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-5 border-b border-zinc-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            {/* 사람 모양 아이콘 */}
-            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-purple-600/30 to-indigo-600/30 border-2 border-purple-500/50 flex items-center justify-center">
-              <svg
-                className="w-16 h-16 text-purple-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            </div>
+            <ShaderCanvas
+              size={112}
+              shaderId={evaluatorShaderMap[evaluation.evaluatorId] || 1}
+              isActive={true}
+            />
             <div>
               <h3 className="font-bold text-white text-lg">{evaluator.name}</h3>
-              <p className="text-sm text-gray-400">{evaluator.persona}</p>
+              <p className="text-sm text-zinc-400">{evaluator.persona}</p>
             </div>
           </div>
           <div className={`px-5 py-3 rounded-xl border-2 ${getScoreColor(evaluation.score)}`}>
@@ -150,7 +142,7 @@ export default function EvaluatorCard({ evaluation }: EvaluatorCardProps) {
 
       {/* Key Points */}
       {evaluation.keyPoints && evaluation.keyPoints.length > 0 && (
-        <div className="px-5 py-4 bg-amber-900/20 border-b border-gray-800">
+        <div className="px-5 py-4 bg-amber-900/20 border-b border-zinc-700">
           <div className="text-xs font-medium text-amber-400 uppercase tracking-wide mb-2">핵심 포인트</div>
           <div className="flex flex-wrap gap-2">
             {evaluation.keyPoints.map((point, i) => (
@@ -167,7 +159,7 @@ export default function EvaluatorCard({ evaluation }: EvaluatorCardProps) {
         {/* Detailed Scores - Toggle All */}
         <div className="space-y-2">
           <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-medium text-gray-300">세부 평가 항목</div>
+            <div className="text-sm font-medium text-zinc-300">세부 평가 항목</div>
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-400 hover:text-purple-300 hover:bg-purple-900/30 rounded-lg transition-colors"
@@ -237,9 +229,9 @@ export default function EvaluatorCard({ evaluation }: EvaluatorCardProps) {
         </div>
 
         {/* Comment */}
-        <div className="bg-gray-800 rounded-xl p-4 border-l-4 border-gray-600">
-          <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">총평</div>
-          <p className="text-gray-300 leading-relaxed">{evaluation.comment}</p>
+        <div className="bg-zinc-800 rounded-xl p-4 border-l-4 border-zinc-600">
+          <div className="text-xs font-medium text-zinc-400 uppercase tracking-wide mb-2">총평</div>
+          <p className="text-zinc-300 leading-relaxed">{evaluation.comment}</p>
         </div>
       </div>
     </div>

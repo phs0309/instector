@@ -76,7 +76,7 @@ export default function ResultPage() {
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400">결과를 불러오는 중...</p>
+          <p className="text-zinc-400">결과를 불러오는 중...</p>
         </div>
       </div>
     )
@@ -88,11 +88,11 @@ export default function ResultPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-white">평가 결과</h2>
-          <p className="text-gray-400 mt-1">{field}</p>
+          <p className="text-zinc-400 mt-1">{field}</p>
         </div>
         <button
           onClick={() => router.push('/')}
-          className="px-5 py-2.5 bg-gray-800 border border-gray-700 hover:bg-gray-700 rounded-xl text-gray-300 transition-all duration-200 font-medium shadow-sm hover:shadow"
+          className="px-5 py-2.5 bg-zinc-800 border border-zinc-600 hover:bg-zinc-700 rounded-xl text-zinc-300 transition-all duration-200 font-medium shadow-sm hover:shadow"
         >
           ← 새 평가하기
         </button>
@@ -101,13 +101,18 @@ export default function ResultPage() {
       {/* Summary */}
       <ResultSummary result={result} />
 
-      {/* Evaluator Cards - 세로 배치 */}
+      {/* Evaluator Card - 1명 통합 평가 */}
       <div>
         <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
           <span className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center text-white text-sm">
-            3
+            AI
           </span>
-          평가위원별 상세 평가
+          AI 상세 평가
+          {result.aiModel && (
+            <span className="ml-2 px-3 py-1 text-xs bg-zinc-800 text-zinc-400 rounded-full border border-zinc-700">
+              {result.aiModel === 'gpt-4o' ? 'GPT-4o' : 'Gemini'}
+            </span>
+          )}
         </h3>
         <div className="space-y-6">
           {result.evaluations.map((evaluation) => (
@@ -127,7 +132,7 @@ export default function ResultPage() {
             </div>
             <div>
               <h3 className="text-lg font-bold text-white">AI 모범 답안 생성</h3>
-              <p className="text-sm text-gray-400">평가위원들의 피드백을 반영하여 수정된 답안을 생성합니다</p>
+              <p className="text-sm text-zinc-400">평가위원들의 피드백을 반영하여 수정된 답안을 생성합니다</p>
             </div>
           </div>
           {!modelAnswer && !isGeneratingAnswer ? (
@@ -143,7 +148,7 @@ export default function ResultPage() {
           ) : (
             <button
               onClick={() => setShowModelAnswer(!showModelAnswer)}
-              className="px-6 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white rounded-xl transition-all duration-200 font-medium flex items-center gap-2"
+              className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-white rounded-xl transition-all duration-200 font-medium flex items-center gap-2"
             >
               {showModelAnswer ? (
                 <>
@@ -168,18 +173,18 @@ export default function ResultPage() {
         {showModelAnswer && (
           <div className="mt-6 animate-fadeIn">
             {isGeneratingAnswer ? (
-              <div className="bg-gray-900/80 rounded-xl p-8 border border-gray-700">
+              <div className="bg-zinc-800/80 rounded-xl p-8 border border-zinc-600">
                 <div className="text-center">
                   <div className="relative w-20 h-20 mx-auto mb-6">
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-spin opacity-30" style={{ animationDuration: '3s' }} />
-                    <div className="absolute inset-2 bg-gray-900 rounded-full flex items-center justify-center">
+                    <div className="absolute inset-2 bg-zinc-800 rounded-full flex items-center justify-center">
                       <svg className="w-8 h-8 text-purple-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                       </svg>
                     </div>
                   </div>
                   <p className="text-white font-medium mb-2">모범 답안을 생성하고 있습니다</p>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-zinc-400">
                     평가위원들의 피드백을 분석하여 강점은 유지하고 약점을 보완합니다...
                   </p>
                 </div>
@@ -200,9 +205,9 @@ export default function ResultPage() {
                 </button>
               </div>
             ) : modelAnswer ? (
-              <div className="bg-gray-900/80 rounded-xl border border-gray-700 overflow-hidden">
+              <div className="bg-zinc-800/80 rounded-xl border border-zinc-600 overflow-hidden">
                 {/* 모범답안 헤더 */}
-                <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 p-4 border-b border-gray-700">
+                <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 p-4 border-b border-zinc-600">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,7 +215,7 @@ export default function ResultPage() {
                       </svg>
                       <span className="text-white font-medium">피드백 반영 수정 답안</span>
                     </div>
-                    <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
+                    <span className="text-xs text-zinc-400 bg-zinc-800 px-2 py-1 rounded">
                       평가위원 피드백 기반
                     </span>
                   </div>
@@ -219,15 +224,15 @@ export default function ResultPage() {
                 {/* 모범답안 내용 */}
                 <div className="p-6">
                   <div className="prose prose-invert max-w-none">
-                    <div className="whitespace-pre-wrap text-gray-300 leading-relaxed">
+                    <div className="whitespace-pre-wrap text-zinc-300 leading-relaxed">
                       {modelAnswer}
                     </div>
                   </div>
                 </div>
 
                 {/* 복사 버튼 */}
-                <div className="p-4 border-t border-gray-700 bg-gray-800/50 flex justify-between items-center">
-                  <p className="text-xs text-gray-500">
+                <div className="p-4 border-t border-zinc-600 bg-zinc-800/50 flex justify-between items-center">
+                  <p className="text-xs text-zinc-500">
                     본 답안은 AI가 생성한 참고용 답안입니다.
                   </p>
                   <button
@@ -250,28 +255,28 @@ export default function ResultPage() {
       </div>
 
       {/* OCR Result Toggle */}
-      <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden shadow-sm">
+      <div className="bg-zinc-800 rounded-2xl border border-zinc-700 overflow-hidden shadow-sm">
         <button
           onClick={() => setShowOCR(!showOCR)}
-          className="w-full p-5 flex items-center justify-between hover:bg-gray-800 transition-colors"
+          className="w-full p-5 flex items-center justify-between hover:bg-zinc-800 transition-colors"
         >
           <div className="flex items-center gap-3">
-            <span className="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center text-gray-400">
+            <span className="w-10 h-10 bg-zinc-800 rounded-xl flex items-center justify-center text-zinc-400">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </span>
-            <span className="font-medium text-gray-300">OCR 추출 텍스트 확인</span>
+            <span className="font-medium text-zinc-300">OCR 추출 텍스트 확인</span>
           </div>
-          <span className={`text-gray-500 transition-transform duration-200 ${showOCR ? 'rotate-180' : ''}`}>
+          <span className={`text-zinc-500 transition-transform duration-200 ${showOCR ? 'rotate-180' : ''}`}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </span>
         </button>
         {showOCR && (
-          <div className="p-5 border-t border-gray-800 bg-gray-800/50 animate-fadeIn">
-            <pre className="whitespace-pre-wrap text-sm text-gray-300 font-mono leading-relaxed">
+          <div className="p-5 border-t border-zinc-700 bg-zinc-800/50 animate-fadeIn">
+            <pre className="whitespace-pre-wrap text-sm text-zinc-300 font-mono leading-relaxed">
               {extractedText}
             </pre>
           </div>
@@ -282,7 +287,7 @@ export default function ResultPage() {
       <div className="flex justify-center gap-4">
         <button
           onClick={() => window.print()}
-          className="px-6 py-3 bg-gray-800 border border-gray-700 hover:bg-gray-700 rounded-xl text-gray-300 transition-all duration-200 font-medium shadow-sm hover:shadow flex items-center gap-2"
+          className="px-6 py-3 bg-zinc-800 border border-zinc-600 hover:bg-zinc-700 rounded-xl text-zinc-300 transition-all duration-200 font-medium shadow-sm hover:shadow flex items-center gap-2"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -310,7 +315,7 @@ export default function ResultPage() {
       </div>
 
       {/* Footer Note */}
-      <div className="text-center text-sm text-gray-500 py-4 border-t border-gray-800">
+      <div className="text-center text-sm text-zinc-500 py-4 border-t border-zinc-700">
         본 평가는 AI 기반 참고용 평가이며, 실제 시험 결과와 다를 수 있습니다.
       </div>
     </div>

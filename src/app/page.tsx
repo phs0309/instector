@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic'
 // Dynamic import for ShaderCanvas to avoid SSR issues with WebGL
 const ShaderCanvas = dynamic(() => import('@/components/ShaderCanvas'), {
   ssr: false,
-  loading: () => <div className="w-32 h-32 bg-gray-800 rounded-full animate-pulse" />,
+  loading: () => <div className="w-32 h-32 bg-zinc-800 rounded-full animate-pulse" />,
 })
 
 // 스크롤 애니메이션 훅
@@ -44,17 +44,17 @@ const features = [
       </svg>
     ),
     title: 'AI 손글씨 인식',
-    description: '사진만 찍으면 끝. Google Vision AI가 손글씨를 98% 정확도로 인식합니다.',
+    description: 'Google Vision AI가 손글씨 답안을 정확하게 텍스트로 변환합니다.',
     color: 'indigo',
   },
   {
     icon: (
       <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
       </svg>
     ),
-    title: '3인 AI 평가위원',
-    description: '실제 채점관처럼 이론·실무·구조를 각각 다른 관점에서 평가합니다.',
+    title: 'GPT-4o / Gemini 선택',
+    description: 'ChatGPT 또는 Gemini 중 원하는 AI 모델을 선택하여 평가받을 수 있습니다.',
     color: 'purple',
   },
   {
@@ -73,18 +73,18 @@ const features = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
       </svg>
     ),
-    title: '5개 영역 점수 분석',
-    description: '이론·실무·구조·표현력·완성도를 100점 만점으로 정량화해 드립니다.',
+    title: '상세 분석 리포트',
+    description: '이론, 실무, 구조, 표현력, 완성도 5개 영역의 세부 점수를 제공합니다.',
     color: 'emerald',
   },
   {
     icon: (
       <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
       </svg>
     ),
-    title: 'AI 모범 답안 제공',
-    description: '같은 문제에 대해 80점 이상 받을 수 있는 모범 답안을 생성해 드립니다.',
+    title: '84개 기술사 종목',
+    description: '건설, 안전, 기계, 전기, 정보통신 등 국가기술자격 84개 종목을 지원합니다.',
     color: 'pink',
   },
   {
@@ -93,47 +93,39 @@ const features = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
       </svg>
     ),
-    title: '합격 맞춤 학습 전략',
-    description: '당신의 취약점을 정확히 분석하고, 단기간 점수를 올릴 학습법을 제안합니다.',
+    title: '맞춤형 학습 가이드',
+    description: '취약점 분석과 함께 합격을 위한 학습 방향을 제시합니다.',
     color: 'amber',
   },
 ]
 
-// 평가위원 데이터
-const evaluators = [
+// AI 모델 데이터
+const aiModels = [
   {
-    id: 'A',
-    name: '김학술',
-    persona: '이론 전문가형',
-    description: '기술 개념과 이론의 정확성을 평가합니다. "이 원리의 수학적 근거는?", "최신 표준과 일치하는가?"를 묻습니다. 이론 깊이와 논리적 엄밀성에 가장 높은 가중치를 둡니다.',
-    shaderId: 2,
-    color: 'from-purple-500 to-indigo-600',
+    id: 'gpt-4o',
+    name: 'ChatGPT',
+    fullName: 'GPT-4o',
+    description: 'OpenAI의 최신 멀티모달 AI 모델로, 높은 정확도와 깊이 있는 분석을 제공합니다.',
+    shaderId: 1,
+    color: 'from-emerald-500 to-green-600',
   },
   {
-    id: 'B',
-    name: '박실무',
-    persona: '실무 전문가형',
-    description: '현장 적용 가능성을 중점 평가합니다. "이 방법이 실제로 작동하는가?", "비용과 일정은 현실적인가?"를 검증합니다. 20년 경력 프로젝트 매니저의 시각으로 답안을 검토합니다.',
+    id: 'gemini',
+    name: 'Gemini',
+    fullName: '2.5 Flash',
+    description: 'Google의 빠르고 효율적인 AI 모델로, 신속한 평가와 정확한 피드백을 제공합니다.',
     shaderId: 2,
-    color: 'from-purple-500 to-indigo-600',
-  },
-  {
-    id: 'C',
-    name: '이균형',
-    persona: '합격 전략형',
-    description: '실제 채점 기준에 맞춰 평가합니다. "핵심 키워드가 포함되었는가?", "답안 구조가 채점자 친화적인가?"를 분석합니다. 과년도 출제위원 경력을 바탕으로 합격 확률을 예측합니다.',
-    shaderId: 2,
-    color: 'from-purple-500 to-indigo-600',
+    color: 'from-blue-500 to-indigo-600',
   },
 ]
 
-// 기술사 분야 카테고리
+// 기술사 분야 카테고리 (84개 종목)
 const fieldCategories = [
-  { name: '정보통신', fields: ['정보관리기술사', '컴퓨터시스템응용기술사', '정보통신기술사'], icon: '💻' },
-  { name: '전기·전자', fields: ['전자응용기술사', '전기응용기술사', '전기철도기술사'], icon: '⚡' },
-  { name: '기계·건설', fields: ['기계기술사', '토목구조기술사', '건축시공기술사', '건축구조기술사'], icon: '🏗️' },
-  { name: '화학·환경', fields: ['화공기술사', '대기관리기술사', '수질관리기술사'], icon: '🧪' },
-  { name: '안전·품질', fields: ['산업안전기술사', '건설안전기술사', '소방기술사', '품질관리기술사'], icon: '🛡️' },
+  { name: '건설 및 건축', count: 19, fields: ['건축시공기술사', '토목시공기술사', '토목구조기술사', '도시계획기술사'], icon: '🏗️' },
+  { name: '안전관리 및 환경', count: 14, fields: ['소방기술사', '건설안전기술사', '수질관리기술사', '대기관리기술사'], icon: '🛡️' },
+  { name: '기계 및 금속', count: 13, fields: ['기계기술사', '공조냉동기계기술사', '차량기술사', '조선기술사'], icon: '⚙️' },
+  { name: '전기·전자·정보통신', count: 9, fields: ['정보관리기술사', '발송배전기술사', '전자응용기술사', '정보통신기술사'], icon: '💻' },
+  { name: '화공·에너지·기타', count: 29, fields: ['화공기술사', '원자력발전기술사', '식품기술사', '품질관리기술사'], icon: '🧪' },
 ]
 
 // 사용 방법 단계
@@ -160,11 +152,11 @@ const steps = [
   },
   {
     num: '03',
-    title: '3인 AI 평가',
-    description: '3명의 AI 평가위원이 병렬로 평가를 진행합니다.',
+    title: 'AI 평가 진행',
+    description: 'GPT-4o 또는 Gemini AI가 답안을 종합 평가합니다.',
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
       </svg>
     ),
   },
@@ -214,20 +206,19 @@ export default function LandingPage() {
             <span className="text-white ml-4">AI</span>
           </h1>
 
-          <p className="text-sm text-gray-500 tracking-[0.3em] uppercase mb-6 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+          <p className="text-sm text-zinc-500 tracking-[0.3em] uppercase mb-6 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
             Professional Engineer Examiner AI
           </p>
 
           {/* 서브 타이틀 */}
           <h2 className="text-2xl md:text-3xl font-medium text-center mb-4 animate-fadeIn" style={{ animationDelay: '0.2s' }}>
             <span className="bg-gradient-to-r from-gray-200 via-white to-gray-200 bg-clip-text text-transparent">
-              기술사 합격률 15%, 당신의 답안은 합격권인가요?
+              AI 기술사 답안 평가 서비스
             </span>
           </h2>
 
-          <p className="text-gray-400 text-lg text-center max-w-2xl mb-10 animate-fadeIn" style={{ animationDelay: '0.3s' }}>
-            3명의 AI 평가위원이 실제 채점 기준으로 답안을 분석하고,<br />
-            <span className="text-blue-400 font-semibold">합격을 위해 반드시 개선해야 할 포인트</span>를 알려드립니다
+          <p className="text-zinc-400 text-lg text-center max-w-lg mb-10 animate-fadeIn" style={{ animationDelay: '0.3s' }}>
+            GPT-4o 또는 Gemini AI가 당신의 기술사 답안을 종합적으로 평가합니다
           </p>
 
           {/* CTA 버튼 */}
@@ -246,7 +237,7 @@ export default function LandingPage() {
 
         {/* 스크롤 인디케이터 */}
         <div className="absolute bottom-8 animate-bounce">
-          <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
           </svg>
         </div>
@@ -261,18 +252,17 @@ export default function LandingPage() {
       >
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            혼자서는 알 수 없는 <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">답안의 약점</span>
+            왜 <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">PEEX AI</span>인가요?
           </h2>
-          <p className="text-gray-400 text-center mb-16 max-w-2xl mx-auto">
-            스터디 없이도, 학원 없이도 전문가급 피드백을 받을 수 있습니다.<br />
-            <span className="text-white font-semibold">단 3분이면 답안 분석이 완료</span>됩니다.
+          <p className="text-zinc-400 text-center mb-16 max-w-2xl mx-auto">
+            기술사 시험 준비를 위한 가장 효과적인 AI 기반 평가 시스템
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <div
                 key={feature.title}
-                className={`group relative bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl border border-gray-800/50 p-8 hover:border-${feature.color}-500/30 transition-all duration-500 hover:shadow-lg hover:shadow-${feature.color}-500/10`}
+                className={`group relative bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-2xl border border-zinc-700/50 p-8 hover:border-${feature.color}-500/30 transition-all duration-500 hover:shadow-lg hover:shadow-${feature.color}-500/10`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className={`absolute inset-0 bg-gradient-to-br from-${feature.color}-600/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
@@ -281,7 +271,7 @@ export default function LandingPage() {
                     {feature.icon}
                   </div>
                   <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
-                  <p className="text-gray-400 leading-relaxed">{feature.description}</p>
+                  <p className="text-zinc-400 leading-relaxed">{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -300,7 +290,7 @@ export default function LandingPage() {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
             어떻게 <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">사용하나요?</span>
           </h2>
-          <p className="text-gray-400 text-center mb-16 max-w-2xl mx-auto">
+          <p className="text-zinc-400 text-center mb-16 max-w-2xl mx-auto">
             간단한 4단계로 전문적인 AI 평가를 받아보세요
           </p>
 
@@ -319,13 +309,13 @@ export default function LandingPage() {
                     <div className="relative w-20 h-20 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-300">
                       {step.icon}
                     </div>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-gray-900 border-2 border-purple-500 rounded-lg flex items-center justify-center text-purple-400 text-xs font-bold">
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-zinc-800 border-2 border-purple-500 rounded-lg flex items-center justify-center text-purple-400 text-xs font-bold">
                       {step.num}
                     </div>
                   </div>
 
                   <h3 className="text-lg font-bold text-white mb-2">{step.title}</h3>
-                  <p className="text-sm text-gray-400">{step.description}</p>
+                  <p className="text-sm text-zinc-400">{step.description}</p>
                 </div>
               </div>
             ))}
@@ -333,42 +323,38 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* AI Evaluators Section */}
+      {/* AI Models Section */}
       <section
         ref={evaluatorsAnim.ref}
         className={`py-24 px-6 transition-all duration-700 ${
           evaluatorsAnim.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            실제 채점관처럼 평가하는 <span className="bg-gradient-to-r from-green-400 via-blue-400 to-pink-400 bg-clip-text text-transparent">3인의 AI</span>
+            <span className="bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">AI 모델</span> 선택
           </h2>
-          <p className="text-gray-400 text-center mb-16 max-w-2xl mx-auto">
-            학술·실무·합격 전략, 세 가지 관점에서 당신의 답안을 동시에 평가합니다.<br />
-            <span className="text-white font-semibold">한 명의 의견이 아닌, 3명의 합의된 평가</span>를 받아보세요.
+          <p className="text-zinc-400 text-center mb-16 max-w-2xl mx-auto">
+            ChatGPT (GPT-4o) 또는 Gemini 중 원하는 AI 모델을 선택하여 평가받을 수 있습니다
           </p>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {evaluators.map((evaluator, index) => (
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {aiModels.map((model, index) => (
               <div
-                key={evaluator.id}
-                className="group flex flex-col items-center text-center p-8 rounded-3xl bg-gradient-to-b from-gray-900 to-gray-950 border border-gray-800/50 hover:border-purple-500/30 transition-all duration-500"
+                key={model.id}
+                className="group flex flex-col items-center text-center p-8 rounded-3xl bg-gradient-to-b from-zinc-800 to-zinc-900 border border-zinc-700/50 hover:border-zinc-600/50 transition-all duration-500"
               >
-                {/* 아이콘 영역 */}
+                {/* Shader 이펙트 */}
                 <div className="relative mb-6">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-600/20 to-indigo-600/20 flex items-center justify-center border border-purple-500/30 group-hover:border-purple-500/50 transition-all">
-                    <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-purple-400 to-indigo-400">
-                      {evaluator.id}
-                    </span>
-                  </div>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${model.color} rounded-full blur-2xl opacity-30 group-hover:opacity-50 transition-opacity`} />
+                  <ShaderCanvas size={180} shaderId={model.shaderId} isActive={true} timeOffset={index * 3.3} />
                 </div>
 
-                <h3 className="text-2xl font-bold text-white mb-1">{evaluator.name}</h3>
-                <p className="text-sm font-semibold mb-4 bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
-                  {evaluator.persona}
+                <h3 className="text-2xl font-bold text-white mb-1">{model.name}</h3>
+                <p className={`text-sm font-semibold mb-4 bg-gradient-to-r ${model.color} bg-clip-text text-transparent`}>
+                  {model.fullName}
                 </p>
-                <p className="text-gray-400 text-sm leading-relaxed">{evaluator.description}</p>
+                <p className="text-zinc-400 text-sm leading-relaxed">{model.description}</p>
               </div>
             ))}
           </div>
@@ -378,44 +364,48 @@ export default function LandingPage() {
       {/* Supported Fields Section */}
       <section
         ref={fieldsAnim.ref}
-        className={`py-24 px-6 bg-gradient-to-b from-gray-900 to-gray-950 transition-all duration-700 ${
+        className={`py-24 px-6 bg-gradient-to-b from-zinc-800/50 to-zinc-900 transition-all duration-700 ${
           fieldsAnim.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            다양한 <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">기술사 종목</span> 지원
+            <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">84개</span> 기술사 종목 지원
           </h2>
-          <p className="text-gray-400 text-center mb-16 max-w-2xl mx-auto">
-            24개 이상의 국가기술자격 기술사 종목을 평가할 수 있습니다
+          <p className="text-zinc-400 text-center mb-16 max-w-2xl mx-auto">
+            국가기술자격 기술사 84개 전 종목을 평가할 수 있습니다
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {fieldCategories.map((category) => (
               <div
                 key={category.name}
-                className="bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl border border-gray-800/50 p-6 hover:border-amber-500/30 transition-all duration-300"
+                className="bg-gradient-to-br from-zinc-800 to-zinc-900 rounded-2xl border border-zinc-700/50 p-6 hover:border-amber-500/30 transition-all duration-300"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-2xl">{category.icon}</span>
-                  <h3 className="text-lg font-bold text-white">{category.name}</h3>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">{category.name}</h3>
+                    <p className="text-xs text-zinc-500">{category.count}개 종목</p>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {category.fields.map((field) => (
                     <span
                       key={field}
-                      className="px-3 py-1.5 bg-gray-800/50 text-gray-300 text-sm rounded-lg border border-gray-700/50"
+                      className="px-3 py-1.5 bg-zinc-700/50 text-zinc-300 text-sm rounded-lg border border-zinc-600/50"
                     >
                       {field}
                     </span>
                   ))}
+                  <span className="px-3 py-1.5 text-zinc-500 text-sm">외 {category.count - 4}개...</span>
                 </div>
               </div>
             ))}
           </div>
 
-          <p className="text-center text-gray-500 mt-8 text-sm">
-            이 외에도 측량및지형공간정보기술사, 발송배전기술사 등 다양한 종목을 지원합니다
+          <p className="text-center text-zinc-500 mt-8 text-sm">
+            건축, 토목, 안전, 환경, 기계, 전기, 정보통신 등 전 분야 기술사 종목을 지원합니다
           </p>
         </div>
       </section>
@@ -434,23 +424,22 @@ export default function LandingPage() {
 
         <div className="max-w-3xl mx-auto text-center relative z-10">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            합격까지 몇 점 부족한가요?{' '}
-            <br className="hidden md:block" />
+            지금 바로{' '}
             <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
-              지금 바로 확인
+              AI 평가
             </span>
-            하세요
+            를 시작하세요
           </h2>
-          <p className="text-gray-400 text-lg mb-10 max-w-xl mx-auto">
-            답안 사진 1장이면 충분합니다. 3분 안에 정확한 평가 결과를 받아보세요.<br />
-            <span className="text-white font-semibold">완전 무료, 회원가입 불필요</span>
+          <p className="text-zinc-400 text-lg mb-10 max-w-xl mx-auto">
+            기술사 합격을 향한 첫 걸음, PEEX AI와 함께하세요.
+            GPT-4o 또는 Gemini AI가 당신의 답안을 기다리고 있습니다.
           </p>
 
           <Link href="/evaluate">
             <button className="group relative px-12 py-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-xl font-bold rounded-2xl hover:shadow-2xl hover:shadow-indigo-500/30 transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
               <span className="relative flex items-center gap-3">
-                내 답안 평가받기 →
+                무료로 시작하기
                 <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -461,7 +450,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-6 border-t border-gray-800/50">
+      <footer className="py-8 px-6 border-t border-zinc-800/50">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="text-xl font-black bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
@@ -469,8 +458,8 @@ export default function LandingPage() {
             </span>
             <span className="text-white font-bold">AI</span>
           </div>
-          <p className="text-gray-500 text-sm">
-            Powered by Google Vision AI & Gemini
+          <p className="text-zinc-500 text-sm">
+            Powered by Google Vision AI & OpenAI GPT-4o / Gemini
           </p>
         </div>
       </footer>

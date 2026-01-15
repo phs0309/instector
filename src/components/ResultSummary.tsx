@@ -28,7 +28,7 @@ export default function ResultSummary({ result }: ResultSummaryProps) {
   }
 
   return (
-    <div className="bg-gray-900 rounded-2xl border border-gray-800 shadow-lg overflow-hidden">
+    <div className="bg-zinc-800 rounded-2xl border border-zinc-700 shadow-lg overflow-hidden">
       {/* Score Header */}
       <div className={`bg-gradient-to-r ${getGradeColor(result.predictedGrade)} p-8`}>
         <div className="text-center text-white">
@@ -81,23 +81,20 @@ export default function ResultSummary({ result }: ResultSummaryProps) {
 
       {/* Content */}
       <div className="p-6 space-y-6">
-        {/* Score Distribution */}
-        <div>
-          <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-4">평가위원별 점수</h3>
-          <div className="grid grid-cols-3 gap-4">
-            {result.evaluations.map((eval_) => (
-              <div key={eval_.evaluatorId} className="text-center p-4 bg-gray-800 rounded-xl">
-                <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-bold">
-                  {eval_.evaluatorId}
-                </div>
-                <div className="text-2xl font-bold text-white">{eval_.score}</div>
-                <div className="text-xs text-gray-500">/ 100</div>
-              </div>
-            ))}
+        {/* AI Model Info (1명 평가위원) */}
+        <div className="flex items-center justify-center gap-4">
+          <div className="text-center p-4 bg-zinc-800 rounded-xl flex-1 max-w-xs">
+            <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-bold text-sm">
+              AI
+            </div>
+            <div className="text-xl font-bold text-white">통합 평가위원</div>
+            <div className="text-xs text-zinc-500 mt-1">
+              이론 + 실무 + 합격 관점
+            </div>
           </div>
         </div>
 
-        <hr className="border-gray-800" />
+        <hr className="border-zinc-700" />
 
         {/* Strengths & Weaknesses */}
         <div className="grid md:grid-cols-2 gap-6">
@@ -156,7 +153,7 @@ export default function ResultSummary({ result }: ResultSummaryProps) {
           </h3>
           <div className="grid md:grid-cols-2 gap-3">
             {result.improvements.map((imp, i) => (
-              <div key={i} className="flex items-start gap-3 bg-gray-800/60 rounded-lg p-3">
+              <div key={i} className="flex items-start gap-3 bg-zinc-800/60 rounded-lg p-3">
                 <span className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
                   {i + 1}
                 </span>

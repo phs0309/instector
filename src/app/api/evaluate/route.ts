@@ -141,34 +141,41 @@ async function callOpenAI(prompt: string, maxTokens: number = 8192): Promise<str
       })
 
       if (!response.ok) {
-        const error = await response.text()
-        console.error(`OpenAI API Error (attempt ${attempt}/3):`, error)
+        const errorText = await response.text()
+        console.error(`\n❌ OpenAI API Error (attempt ${attempt}/3)`)
+        console.error(`   Status: ${response.status}`)
+        console.error(`   Response: ${errorText}`)
 
         if (attempt < 3) {
           await new Promise(resolve => setTimeout(resolve, attempt * 1000))
           continue
         }
-        throw new Error(`OpenAI API 호출 중 오류가 발생했습니다: ${response.status}`)
+        throw new Error(`OpenAI API 오류 (${response.status}): ${errorText.substring(0, 200)}`)
       }
 
       const data = await response.json()
+      console.log(`✅ OpenAI API 응답 수신 (attempt ${attempt})`)
+
       const content = data.choices?.[0]?.message?.content
 
       if (!content) {
+        console.error('❌ OpenAI API 응답에 content가 없습니다:', JSON.stringify(data, null, 2))
         throw new Error('OpenAI API 응답을 가져올 수 없습니다.')
       }
 
       return content
     } catch (error) {
       lastError = error as Error
+      console.error(`❌ OpenAI API 예외 발생 (attempt ${attempt}/3):`, lastError.message)
       if (attempt < 3) {
-        console.log(`재시도 중... (${attempt}/3)`)
+        console.log(`⏳ 재시도 중... (${attempt}/3)`)
         await new Promise(resolve => setTimeout(resolve, attempt * 1000))
         continue
       }
     }
   }
 
+  console.error('❌ OpenAI API 최종 실패:', lastError?.message)
   throw lastError || new Error('OpenAI API 호출 실패')
 }
 
@@ -364,8 +371,24 @@ export async function POST(
     console.log(`✅ 평가 완료: 점수 = ${evaluation.score}`)
     console.log(`⏱️  Step 1 소요시간: ${step1Time}ms`)
 
+    // 평가 결과 상세 로그
+    console.log('\n' + '-'.repeat(50))
+    console.log('📋 AI 평가 결과 상세')
+    console.log('-'.repeat(50))
+    console.log(`총점: ${evaluation.score}/100`)
+    console.log(`강점: ${evaluation.strengths.join(', ')}`)
+    console.log(`약점: ${evaluation.weaknesses.join(', ')}`)
+    console.log(`세부 점수:`)
+    console.log(`  - 이론적 정확성: ${evaluation.detailedFeedback.theory.score}/20`)
+    console.log(`  - 실무 적용성: ${evaluation.detailedFeedback.practical.score}/20`)
+    console.log(`  - 답안 구조: ${evaluation.detailedFeedback.structure.score}/20`)
+    console.log(`  - 표현력: ${evaluation.detailedFeedback.expression.score}/20`)
+    console.log(`  - 완성도: ${evaluation.detailedFeedback.completeness.score}/20`)
+    console.log(`총평: ${evaluation.comment.substring(0, 100)}...`)
+    console.log('-'.repeat(50))
+
     // 종합 분석
-    console.log('\n📌 Step 2: 종합 분석')
+    console.log('\n📌 Step 2: 종합 분석 (Gemini)')
     const step2Start = Date.now()
     const comprehensiveAnalysis = await getComprehensiveAnalysis(evaluation)
     const step2Time = Date.now() - step2Start

@@ -114,7 +114,13 @@ const GPT_SYSTEM_PROMPT = `대한민국 기술사 시험 답안 채점 시스템
 async function callOpenAI(prompt: string, maxTokens: number = 8192): Promise<string> {
   const apiKey = process.env.CHATGPT_API_KEY
 
+  console.log('\n🤖 OpenAI API 호출 시작')
+  console.log(`   API Key 존재: ${apiKey ? '✓ (길이: ' + apiKey.length + ')' : '✗ 없음'}`)
+  console.log(`   모델: gpt-5.2`)
+  console.log(`   max_tokens: ${maxTokens}`)
+
   if (!apiKey) {
+    console.error('❌ CHATGPT_API_KEY 환경변수가 없습니다!')
     throw new Error('ChatGPT API 키가 설정되지 않았습니다.')
   }
 
@@ -122,6 +128,7 @@ async function callOpenAI(prompt: string, maxTokens: number = 8192): Promise<str
   let lastError: Error | null = null
 
   for (let attempt = 1; attempt <= 3; attempt++) {
+    console.log(`\n📡 OpenAI API 요청 시도 ${attempt}/3`)
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',

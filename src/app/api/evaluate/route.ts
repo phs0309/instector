@@ -1,129 +1,268 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { EvaluationResult, EvaluatorType, APIResponse, ComprehensiveResult, StructureAnalysis } from '@/types'
-import { evaluators, getEvaluatorPrompt, getComprehensiveAnalysisPrompt, getStructureAnalysisPrompt } from '@/lib/evaluators'
+import { EvaluationResult, EvaluatorType, APIResponse, ComprehensiveResult, EngineerField, AIModel } from '@/types'
+import { evaluators, getEvaluatorPromptWithField, getComprehensiveAnalysisPrompt } from '@/lib/evaluators'
 
-// Step 1: 구조 분석
-async function analyzeStructure(
-  extractedText: string,
-  apiKey: string
-): Promise<StructureAnalysis> {
-  const stepStart = Date.now()
-  const prompt = getStructureAnalysisPrompt(extractedText)
+// GPT 평가용 시스템 프롬프트 (GPT_prompt.txt에서 로드)
+const GPT_SYSTEM_PROMPT = `대한민국 기술사 시험 답안 채점 시스템 프롬프트
+1. 역할 정의 (Role)
 
-  console.log('=== 구조 분석 시작 ===')
-  console.log(`입력 텍스트 길이: ${extractedText.length}자`)
-  console.log(`프롬프트 길이: ${prompt.length}자`)
+당신은 대한민국 국가기술자격 기술사 시험 답안을 채점하는 전문 평가관이다.
+당신의 역할은 수험생의 답안을 실제 기술사 시험 채점 기준에 최대한 근접하게 평가하고, 합격 가능성 관점에서 점수·수준·보완 방향을 제시하는 것이다.
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-opus-4-5-20251101',
-      max_tokens: 2048,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
+당신은 강의자, 코치, 멘토가 아니다.
+당신은 채점자이며, 평가 기준은 오직 "기술사 시험에서 통과 가능한 답안인가"이다.
+
+2. 채점 철학 (Evaluation Philosophy)
+
+기술사 답안은 지식의 나열이 아니라 사고 구조의 표현이다.
+
+"맞는 말"보다 **"기술사스럽게 정리된 말"**을 더 높이 평가한다.
+
+채점은 관대하지도, 교육적으로도 하지 않는다.
+→ 실제 시험과 동일하게 구조·완성도·통제력 중심으로 감점한다.
+
+부분 점수는 존재하지만, 구조가 무너지면 상한선이 명확히 존재한다.
+
+그림·표·도식은 미적 요소가 아니라 사고 압축 도구로 평가한다.
+
+3. 기본 채점 기준 (Scoring Framework)
+① 구조 점수 (최우선, 약 40%)
+
+서론–본론–결론 또는 정의–원리–적용–한계의 구조적 완결성
+
+문항 요구사항을 빠짐없이 구조로 반영했는가
+
+답안 전체 흐름이 "기술사 사고 루틴"에 맞는가
+
+② 내용 점수 (약 35%)
+
+핵심 개념의 정확성
+
+기술적 용어 사용의 적절성
+
+과도한 설명 없이 핵심 위주로 압축되었는가
+
+③ 표현·가독성 점수 (약 15%)
+
+문장 길이의 통제
+
+항목화, 번호화, 줄바꿈의 적절성
+
+채점자가 빠르게 읽고 구조를 인식할 수 있는가
+
+④ 도식·보조자료 점수 (약 10%)
+
+그림/표/수식이 본문 논리를 보조하는가
+
+설명 없는 장식용 그림은 점수에 거의 기여하지 않음
+
+단순해도 의미 전달이 명확하면 가산
+
+4. 점수 분포 원칙 (Score Distribution)
+
+40점대: 구조 부재, 서술형 메모 수준
+
+50점대: 개념은 있으나 구조 미흡, 불안정
+
+60~65점: 최소 합격권 (구조 성립, 내용 일부 부족)
+
+70점대: 안정적 구조 + 기술사다운 압축
+
+80점 이상: 실제 시험에서도 상위 답안 수준
+
+※ 구조가 무너지면 내용이 좋아도 60점 초과 불가
+
+5. 감점 성향 (Penalty Rules)
+
+다음 항목은 반복적으로 강하게 감점한다.
+
+문제 요구사항 누락
+
+문단형 장문 서술 (항목화 부족)
+
+정의 없이 바로 설명 시작
+
+키워드 나열식 답안
+
+그림만 있고 설명이 없는 경우
+
+시험장에서 쓰기 어려운 과도한 분량
+
+6. 선호하는 답안 구조 (Preferred Structure)
+
+기본 권장 구조는 다음 중 하나를 따른다.
+
+정의 → 원리 → 구성요소 → 적용/사례 → 한계/유의점
+
+개요 → 메커니즘 → 설계/운영 포인트 → 문제점 → 대책
+
+분류 → 각 항목별 핵심 설명 → 종합 정리
+
+※ 문제 유형에 따라 구조 변형은 허용하되, 일관된 사고 흐름은 필수
+
+7. 말투 및 평가 스타일 (Tone & Style)
+
+단정적, 평가자 시점
+
+불필요한 미사여구 금지
+
+"~로 볼 수 있다 / ~수준이다 / ~가 부족하다"와 같은 판정형 문장 사용
+
+위로, 격려, 학습 코칭 문구 사용 금지`
+
+// OpenAI API 호출 함수 (GPT-5.2 사용, GPT_prompt.txt 시스템 프롬프트 적용)
+async function callOpenAI(prompt: string, maxTokens: number = 8192): Promise<string> {
+  const apiKey = process.env.CHATGPT_API_KEY
+
+  if (!apiKey) {
+    throw new Error('ChatGPT API 키가 설정되지 않았습니다.')
+  }
+
+  // 재시도 로직 (최대 3번)
+  let lastError: Error | null = null
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
         },
-      ],
-    }),
-  })
+        body: JSON.stringify({
+          model: 'gpt-5.2',
+          messages: [
+            { role: 'system', content: GPT_SYSTEM_PROMPT },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: maxTokens,
+          temperature: 0.7,
+        }),
+      })
 
-  if (!response.ok) {
-    const error = await response.text()
-    console.error('Structure Analysis Error:', error)
-    throw new Error('구조 분석 중 오류가 발생했습니다.')
+      if (!response.ok) {
+        const error = await response.text()
+        console.error(`OpenAI API Error (attempt ${attempt}/3):`, error)
+
+        if (attempt < 3) {
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000))
+          continue
+        }
+        throw new Error(`OpenAI API 호출 중 오류가 발생했습니다: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const content = data.choices?.[0]?.message?.content
+
+      if (!content) {
+        throw new Error('OpenAI API 응답을 가져올 수 없습니다.')
+      }
+
+      return content
+    } catch (error) {
+      lastError = error as Error
+      if (attempt < 3) {
+        console.log(`재시도 중... (${attempt}/3)`)
+        await new Promise(resolve => setTimeout(resolve, attempt * 1000))
+        continue
+      }
+    }
   }
 
-  const apiTime = Date.now() - stepStart
-  console.log(`API 응답 시간: ${apiTime}ms`)
-
-  const data = await response.json()
-  const content = data.content[0]?.text
-
-  console.log(`응답 토큰: 입력=${data.usage?.input_tokens}, 출력=${data.usage?.output_tokens}`)
-  console.log(`응답 길이: ${content?.length || 0}자`)
-
-  if (!content) {
-    throw new Error('구조 분석 결과를 가져올 수 없습니다.')
-  }
-
-  // JSON 파싱 (마크다운 코드 블록 제거)
-  const jsonMatch = content.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) {
-    throw new Error('구조 분석 응답 형식이 올바르지 않습니다.')
-  }
-
-  const totalTime = Date.now() - stepStart
-  console.log(`=== 구조 분석 완료: ${totalTime}ms ===\n`)
-
-  return JSON.parse(jsonMatch[0])
+  throw lastError || new Error('OpenAI API 호출 실패')
 }
 
-// Step 2: 평가위원 평가 (구조 분석 결과 포함)
+// Gemini API 호출 함수
+async function callGemini(prompt: string, maxTokens: number = 8192): Promise<string> {
+  const apiKey = process.env.GOOGLE_API_KEY
+
+  if (!apiKey) {
+    throw new Error('Google API 키가 설정되지 않았습니다.')
+  }
+
+  // 재시도 로직 (최대 3번)
+  let lastError: Error | null = null
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [{ text: prompt }],
+              },
+            ],
+            generationConfig: {
+              maxOutputTokens: maxTokens,
+              temperature: 0.7,
+            },
+          }),
+        }
+      )
+
+      if (!response.ok) {
+        const error = await response.text()
+        console.error(`Gemini API Error (attempt ${attempt}/3):`, error)
+
+        if (attempt < 3) {
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000))
+          continue
+        }
+        throw new Error(`Gemini API 호출 중 오류가 발생했습니다: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text
+
+      if (!content) {
+        throw new Error('Gemini API 응답을 가져올 수 없습니다.')
+      }
+
+      return content
+    } catch (error) {
+      lastError = error as Error
+      if (attempt < 3) {
+        console.log(`재시도 중... (${attempt}/3)`)
+        await new Promise(resolve => setTimeout(resolve, attempt * 1000))
+        continue
+      }
+    }
+  }
+
+  throw lastError || new Error('Gemini API 호출 실패')
+}
+
+// 통합 AI 호출 함수 (모델 선택에 따라 분기)
+async function callAI(prompt: string, aiModel: AIModel, maxTokens: number = 8192): Promise<string> {
+  if (aiModel === 'gpt-4o') {
+    // GPT-5.2 사용, GPT_prompt.txt 시스템 프롬프트 자동 적용
+    return await callOpenAI(prompt, maxTokens)
+  } else {
+    return await callGemini(prompt, maxTokens)
+  }
+}
+
+// 평가위원 평가 (선택된 기술사 종목 및 AI 모델 사용)
 async function evaluateWithAI(
   evaluatorId: EvaluatorType,
   extractedText: string,
-  structureAnalysis: StructureAnalysis,
-  apiKey: string
+  selectedField: EngineerField,
+  aiModel: AIModel
 ): Promise<EvaluationResult> {
-  const stepStart = Date.now()
   const evaluator = evaluators[evaluatorId]
-  const prompt = getEvaluatorPrompt(evaluator, extractedText, structureAnalysis)
+  const prompt = getEvaluatorPromptWithField(evaluator, extractedText, selectedField)
+  const content = await callAI(prompt, aiModel, 8192)
 
-  console.log(`=== 평가위원 ${evaluatorId} 시작 ===`)
-  console.log(`프롬프트 길이: ${prompt.length}자`)
-
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-opus-4-5-20251101',
-      max_tokens: 4096,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    }),
-  })
-
-  const apiTime = Date.now() - stepStart
-  console.log(`평가위원 ${evaluatorId} API 응답 시간: ${apiTime}ms`)
-
-  if (!response.ok) {
-    const error = await response.text()
-    console.error(`Evaluator ${evaluatorId} Error:`, error)
-    throw new Error(`평가위원 ${evaluatorId} 평가 중 오류가 발생했습니다.`)
-  }
-
-  const data = await response.json()
-  const content = data.content[0]?.text
-
-  console.log(`평가위원 ${evaluatorId} 토큰: 입력=${data.usage?.input_tokens}, 출력=${data.usage?.output_tokens}`)
-  console.log(`평가위원 ${evaluatorId} 응답 길이: ${content?.length || 0}자`)
-
-  if (!content) {
-    throw new Error(`평가위원 ${evaluatorId}의 평가 결과를 가져올 수 없습니다.`)
-  }
-
-  // JSON 파싱 (마크다운 코드 블록 제거)
   const jsonMatch = content.match(/\{[\s\S]*\}/)
   if (!jsonMatch) {
-    throw new Error(`평가위원 ${evaluatorId}의 응답 형식이 올바르지 않습니다.`)
+    throw new Error(`평가위원의 응답 형식이 올바르지 않습니다.`)
   }
-
-  const totalTime = Date.now() - stepStart
-  console.log(`=== 평가위원 ${evaluatorId} 완료: ${totalTime}ms ===\n`)
 
   const result = JSON.parse(jsonMatch[0])
 
@@ -144,73 +283,30 @@ async function evaluateWithAI(
   }
 }
 
+// 종합 분석 (항상 Gemini 사용)
 async function getComprehensiveAnalysis(
-  evaluations: EvaluationResult[],
-  apiKey: string
-): Promise<Omit<ComprehensiveResult, 'evaluations'>> {
-  const stepStart = Date.now()
+  evaluation: EvaluationResult
+) {
+  const evaluationText = `[AI 평가위원]
+점수: ${evaluation.score}/100
+강점: ${evaluation.strengths.join(', ')}
+약점: ${evaluation.weaknesses.join(', ')}
+코멘트: ${evaluation.comment}
+세부 점수:
+- 이론적 정확성: ${evaluation.detailedFeedback.theory.score}/20
+- 실무 적용성: ${evaluation.detailedFeedback.practical.score}/20
+- 답안 구조: ${evaluation.detailedFeedback.structure.score}/20
+- 표현력: ${evaluation.detailedFeedback.expression.score}/20
+- 완성도: ${evaluation.detailedFeedback.completeness.score}/20`
 
-  const evaluationsText = evaluations
-    .map((e) => {
-      return `[평가위원 ${e.evaluatorId}]
-점수: ${e.score}/100
-강점: ${e.strengths.join(', ')}
-약점: ${e.weaknesses.join(', ')}
-코멘트: ${e.comment}`
-    })
-    .join('\n\n')
+  const prompt = getComprehensiveAnalysisPrompt(evaluationText)
+  // 종합 분석은 항상 Gemini로 처리
+  const content = await callGemini(prompt, 4096)
 
-  const prompt = getComprehensiveAnalysisPrompt(evaluationsText)
-
-  console.log('=== 종합 분석 시작 ===')
-  console.log(`프롬프트 길이: ${prompt.length}자`)
-
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-opus-4-5-20251101',
-      max_tokens: 2048,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    }),
-  })
-
-  const apiTime = Date.now() - stepStart
-  console.log(`종합 분석 API 응답 시간: ${apiTime}ms`)
-
-  if (!response.ok) {
-    const error = await response.text()
-    console.error('Comprehensive Analysis Error:', error)
-    throw new Error('종합 분석 중 오류가 발생했습니다.')
-  }
-
-  const data = await response.json()
-  const content = data.content[0]?.text
-
-  console.log(`종합 분석 토큰: 입력=${data.usage?.input_tokens}, 출력=${data.usage?.output_tokens}`)
-  console.log(`종합 분석 응답 길이: ${content?.length || 0}자`)
-
-  if (!content) {
-    throw new Error('종합 분석 결과를 가져올 수 없습니다.')
-  }
-
-  // JSON 파싱 (마크다운 코드 블록 제거)
   const jsonMatch = content.match(/\{[\s\S]*\}/)
   if (!jsonMatch) {
     throw new Error('종합 분석 응답 형식이 올바르지 않습니다.')
   }
-
-  const totalTime = Date.now() - stepStart
-  console.log(`=== 종합 분석 완료: ${totalTime}ms ===\n`)
 
   return JSON.parse(jsonMatch[0])
 }
@@ -219,7 +315,7 @@ export async function POST(
   request: NextRequest
 ): Promise<NextResponse<APIResponse<ComprehensiveResult>>> {
   try {
-    const { extractedText } = await request.json()
+    const { extractedText, selectedField, aiModel = 'gpt-4o' } = await request.json()
 
     if (!extractedText) {
       return NextResponse.json({
@@ -228,23 +324,26 @@ export async function POST(
       }, { status: 400 })
     }
 
-    // 3개의 API 키 (각 평가위원별로 다른 키 사용하여 병렬 처리 최적화)
-    const apiKeys = [
-      process.env.ANTHROPIC_API_KEY,
-      process.env.ANTHROPIC_API_KEY_2,
-      process.env.ANTHROPIC_API_KEY_3,
-    ].filter(Boolean) as string[]
-
-    if (apiKeys.length === 0) {
+    if (!selectedField) {
       return NextResponse.json({
         success: false,
-        error: 'Anthropic API 키가 설정되지 않았습니다.',
+        error: '기술사 종목이 선택되지 않았습니다.',
+      }, { status: 400 })
+    }
+
+    // API 키 확인
+    if (aiModel === 'gpt-4o' && !process.env.CHATGPT_API_KEY) {
+      return NextResponse.json({
+        success: false,
+        error: 'ChatGPT API 키가 설정되지 않았습니다.',
       }, { status: 500 })
     }
 
-    // API 키가 부족하면 첫 번째 키로 채움
-    while (apiKeys.length < 3) {
-      apiKeys.push(apiKeys[0])
+    if (aiModel === 'gemini' && !process.env.GOOGLE_API_KEY) {
+      return NextResponse.json({
+        success: false,
+        error: 'Google API 키가 설정되지 않았습니다.',
+      }, { status: 500 })
     }
 
     const startTime = Date.now()
@@ -253,59 +352,40 @@ export async function POST(
     console.log('📊 평가 프로세스 시작')
     console.log('='.repeat(60))
     console.log(`시작 시간: ${new Date().toISOString()}`)
-    console.log(`API 키 개수: ${apiKeys.length}개`)
+    console.log(`AI 모델: ${aiModel}`)
+    console.log(`기술사 종목: ${selectedField}`)
 
-    // Step 1: 구조 분석 (평가 전 사전 분석)
-    console.log('\n📌 Step 1: 구조 분석')
+    // 1명 통합 평가위원 평가
+    console.log('\n📌 Step 1: AI 평가위원 평가')
     const step1Start = Date.now()
-    const structureAnalysis = await analyzeStructure(extractedText, apiKeys[0])
+    const evaluatorId: EvaluatorType = 'A'
+    const evaluation = await evaluateWithAI(evaluatorId, extractedText, selectedField, aiModel as AIModel)
     const step1Time = Date.now() - step1Start
-    console.log(`✅ 구조 분석 결과: ${structureAnalysis.detectedField}, 점수: ${structureAnalysis.overallStructureScore}`)
-    console.log(`⏱️  Step 1 총 소요시간: ${step1Time}ms`)
-
-    // Step 2: 3명의 평가위원 병렬 평가 (각각 다른 API 키 사용)
-    console.log('\n📌 Step 2: 평가위원 병렬 평가')
-    const step2Start = Date.now()
-    const evaluatorConfigs: { id: EvaluatorType; apiKey: string }[] = [
-      { id: 'A', apiKey: apiKeys[0] },
-      { id: 'B', apiKey: apiKeys[1] },
-      { id: 'C', apiKey: apiKeys[2] },
-    ]
-
-    const evaluationPromises = evaluatorConfigs.map(({ id, apiKey }) =>
-      evaluateWithAI(id, extractedText, structureAnalysis, apiKey)
-    )
-
-    const evaluations = await Promise.all(evaluationPromises)
-    const step2Time = Date.now() - step2Start
-    console.log(`✅ 평가위원 점수: A=${evaluations[0].score}, B=${evaluations[1].score}, C=${evaluations[2].score}`)
-    console.log(`⏱️  Step 2 총 소요시간: ${step2Time}ms (병렬 처리)`)
+    console.log(`✅ 평가 완료: 점수 = ${evaluation.score}`)
+    console.log(`⏱️  Step 1 소요시간: ${step1Time}ms`)
 
     // 종합 분석
-    console.log('\n📌 Step 3: 종합 분석')
-    const step3Start = Date.now()
-    const comprehensiveAnalysis = await getComprehensiveAnalysis(
-      evaluations,
-      apiKeys[0]
-    )
-    const step3Time = Date.now() - step3Start
-    console.log(`⏱️  Step 3 총 소요시간: ${step3Time}ms`)
+    console.log('\n📌 Step 2: 종합 분석')
+    const step2Start = Date.now()
+    const comprehensiveAnalysis = await getComprehensiveAnalysis(evaluation)
+    const step2Time = Date.now() - step2Start
+    console.log(`⏱️  Step 2 소요시간: ${step2Time}ms`)
 
     const totalTime = Date.now() - startTime
     console.log('\n' + '='.repeat(60))
     console.log('📊 평가 프로세스 완료')
     console.log('='.repeat(60))
-    console.log(`Step 1 (구조 분석):    ${step1Time}ms`)
-    console.log(`Step 2 (평가위원):     ${step2Time}ms`)
-    console.log(`Step 3 (종합 분석):    ${step3Time}ms`)
+    console.log(`Step 1 (평가):      ${step1Time}ms`)
+    console.log(`Step 2 (종합 분석): ${step2Time}ms`)
     console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)
-    console.log(`🏁 총 소요시간:         ${totalTime}ms (${(totalTime/1000).toFixed(1)}초)`)
+    console.log(`🏁 총 소요시간:      ${totalTime}ms (${(totalTime/1000).toFixed(1)}초)`)
     console.log('='.repeat(60) + '\n')
 
     const result: ComprehensiveResult = {
       ...comprehensiveAnalysis,
-      evaluations,
-      structureAnalysis, // 구조 분석 결과 포함
+      evaluations: [evaluation],
+      selectedField,
+      aiModel,
     }
 
     return NextResponse.json({

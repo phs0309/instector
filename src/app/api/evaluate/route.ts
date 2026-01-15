@@ -116,7 +116,7 @@ async function callOpenAI(prompt: string, maxTokens: number = 8192): Promise<str
 
   console.log('\n🤖 OpenAI API 호출 시작')
   console.log(`   API Key 존재: ${apiKey ? '✓ (길이: ' + apiKey.length + ')' : '✗ 없음'}`)
-  console.log(`   모델: gpt-5.2`)
+  console.log(`   모델: gpt-4o`)
   console.log(`   max_tokens: ${maxTokens}`)
 
   if (!apiKey) {

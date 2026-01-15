@@ -23,18 +23,23 @@ function sendSSE(controller: ReadableStreamDefaultController, event: SSEEvent) {
   controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`))
 }
 
-// OpenAI API 호출 함수 (GPT-4o 사용)
+// OpenAI API 호출 함수 (GPT-5.2 사용)
 async function callOpenAI(prompt: string, systemPrompt: string, maxTokens: number = 8192): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY
+  const apiKey = process.env.CHATGPT_API_KEY
+
+  console.log('\n🤖 OpenAI API 호출 시작 (evaluate-stream)')
+  console.log(`   API Key 존재: ${apiKey ? '✓ (길이: ' + apiKey.length + ')' : '✗ 없음'}`)
+  console.log(`   모델: gpt-5.2`)
 
   if (!apiKey) {
-    throw new Error('OpenAI API 키가 설정되지 않았습니다.')
+    throw new Error('ChatGPT API 키가 설정되지 않았습니다. (CHATGPT_API_KEY)')
   }
 
   // 재시도 로직 (최대 3번)
   let lastError: Error | null = null
 
   for (let attempt = 1; attempt <= 3; attempt++) {
+    console.log(`\n📡 OpenAI API 요청 시도 ${attempt}/3`)
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -43,7 +48,7 @@ async function callOpenAI(prompt: string, systemPrompt: string, maxTokens: numbe
           'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
+          model: 'gpt-5.2',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
@@ -247,8 +252,8 @@ export async function POST(request: NextRequest) {
   }
 
   // API 키 확인
-  if (aiModel === 'gpt-4o' && !process.env.OPENAI_API_KEY) {
-    return new Response(JSON.stringify({ error: 'OpenAI API 키가 설정되지 않았습니다.' }), {
+  if (aiModel === 'gpt-4o' && !process.env.CHATGPT_API_KEY) {
+    return new Response(JSON.stringify({ error: 'ChatGPT API 키가 설정되지 않았습니다. (CHATGPT_API_KEY)' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     })
